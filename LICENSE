@@ -1,0 +1,54 @@
+eorscope-mcp is distributed under three different sets of terms, one per part.
+Read the section that covers the part you want to use.
+
+
+1. SERVER CODE: MIT
+
+Covers: src/ except src/vendor/, scripts/, test/ except test/fixtures/, the
+documentation (README.md, docs/), and the corresponding code in dist/.
+
+MIT License
+
+Copyright (c) 2026 EOR Scope
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+2. COST ENGINE: ALL RIGHTS RESERVED
+
+Covers: every file in src/vendor/ (the cost engine and formatters of the
+eorscope.com site) and their bundled form inside dist/. The MIT License above
+does not apply to them.
+
+Copyright (c) 2026 EOR Scope. All rights reserved.
+
+Distributed with this package only: you may run it as part of eorscope-mcp,
+not extract, modify or redistribute it separately.
+
+THE ENGINE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY ARISING FROM ITS USE.
+
+
+3. DATA: CC BY 4.0
+
+Covers: data/snapshot.json and test/fixtures/.
+
+Creative Commons Attribution 4.0 International. Attribution: EOR Scope,
+eorscope.com. Terms in LICENSE-DATA.

@@ -1,0 +1,4 @@
+node_modules/
+# build output: rebuilt from src/ by `npm run build`, shipped to npm by prepublishOnly
+dist/
+*.tgz

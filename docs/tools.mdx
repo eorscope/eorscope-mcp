@@ -1,0 +1,145 @@
+---
+title: Tools
+description: The five tools of eorscope-mcp, each with a real output of the 2026-10-01 snapshot.
+---
+
+Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-01 snapshot, shortened where marked `…`; `meta` is left out.
+
+Figures come as text (`"at least $156"`) and as numbers under `values`, next to a `bound` field. When a country's total is declared as a floor or a ceiling, the words "at least" or "at most" are part of the figure: keep them when you quote it.
+
+## list_countries
+
+Optional `region`. Alphabetical order.
+
+```json
+{
+  "count": 6,
+  "countries": [
+    { "iso": "IL", "name": "Israel", "slug": "israel", "region": "Middle East", "currency": "ILS", "example_salary_usd": 75000, "employer_cost_at_example": "at least 15.4%" },
+    { "iso": "JO", "name": "Jordan", "slug": "jordan", "region": "Middle East", "currency": "JOD", "example_salary_usd": 24000, "employer_cost_at_example": "14.3%" },
+    …
+  ]
+}
+```
+
+## employer_cost
+
+`country` (ISO code or name), optional `salary` with `salary_currency` (`USD` or `local`), optional `assumptions`, optional `include_notes`. Without a salary, the country's example salary is used. Asked for India, it returns the figure printed on the [EOR Scope page for India](https://eorscope.com/employer-of-record/india/):
+
+```json
+{
+  "summary": "One employee in India at $30,000 gross a year costs about $154 a month in statutory employer charges (+6.2% of gross), before any EOR fee.",
+  "salary": {
+    "annual_usd": 30000,
+    "annual_local": "INR 2,876,322",
+    "is_country_example": "example salary (software engineer), not a median",
+    "fx": { "local_per_usd": 95.8774, "date": "2026-09-18", "source": "European Central Bank — euro foreign exchange reference rates" }
+  },
+  "employer_cost": {
+    "pct_of_gross": "6.2%",
+    "monthly": "$154",
+    "annual": "$1,850",
+    "values": { "bound": null, "pct_of_gross": 6.1659, "monthly_usd": 154.15, "annual_usd": 1849.77 }
+  },
+  "lines": [
+    {
+      "id": "epf_employer",
+      "name": "EPF employer contribution (Employees' Provident Fund)",
+      "type": "contribution",
+      "rate": 0.0367,
+      "rate_printed": "3.67%",
+      "base": "basic",
+      "base_cap_annual_local": 300000,
+      "currency": "INR",
+      "capped": true,
+      "annual_usd": 114.83,
+      "monthly_usd": 9.57,
+      "applies": "Applies to basic wage plus dearness allowance, capped at the statutory wage ceiling of Rs 25,000/month (in force since 17 September 2026)",
+      "source": {
+        "name": "Employees' Provident Fund Organisation - FAQs on the revision of the EPFO statutory wage ceiling (Rs 15,000 to Rs 25,000, S.O. 5109(E))",
+        "url": "https://pmvbry-cdn.epfindia.gov.in/wp-content/uploads/2026/09/EPFO_Wage_Ceiling_FAQs.pdf",
+        "checked_at": "2026-09-26"
+      }
+    },
+    …
+  ],
+  "assumptions": [{ "id": "basic_share_of_gross", "label": "Basic wage as a share of gross", "value": 0.5 }]
+}
+```
+
+## compare_countries
+
+`countries` (2 to 10) and `salary_usd`. Rows come back in the order requested, not ranked. Germany, Poland and the United Arab Emirates at 80,000 USD:
+
+```json
+{
+  "salary_annual_usd": 80000,
+  "countries": [
+    { "iso": "DE", "name": "Germany", "salary_local": "EUR 69,808", "employer_cost": { "pct_of_gross": "22.2%", "monthly": "$1,483", "annual": "$17,793", … } },
+    { "iso": "PL", "name": "Poland", "salary_local": "PLN 304,607", "employer_cost": { "pct_of_gross": "19.8%", "monthly": "$1,320", "annual": "$15,844", … } },
+    { "iso": "AE", "name": "United Arab Emirates", "salary_local": "AED 293,800", "employer_cost": { "pct_of_gross": "at least 2.9%", "monthly": "at least $192", "annual": "at least $2,301", … } }
+  ]
+}
+```
+
+## provider_fees
+
+Optional `provider`, optional `country` (adds whether each provider covers it). A provider that publishes no price is returned as `"quote only"`, never as a zero. Two of the 14 rows:
+
+```json
+{
+  "providers": [
+    {
+      "id": "remote",
+      "name": "Remote",
+      "eor": {
+        "plan": "Employer of Record",
+        "pricing_model": "list",
+        "fee_per_month": "$699",
+        "fee_usd_month": 699,
+        "billing": "monthly",
+        "deposit_policy": "No deposit: 'We collect reserve payments in rare, high risk circumstances' (pricing FAQ).",
+        "source": { "name": "Remote — Pricing", "url": "https://remote.com/pricing", "checked_at": "2026-09-02" }
+      },
+      "countries_excluded": [{ "iso": "MM", "name": "Myanmar" }],
+      "last_reviewed": "2026-09-02"
+    },
+    {
+      "id": "rippling",
+      "name": "Rippling",
+      "eor": {
+        "plan": "Global Employer of Record",
+        "pricing_model": "quote",
+        "fee_per_month": "quote only",
+        "billing": "unknown",
+        "deposit_policy": "Not stated on the pricing page",
+        "source": { "name": "Rippling — Pricing", "url": "https://www.rippling.com/pricing", "checked_at": "2026-09-24" }
+      },
+      "countries_excluded": [{ "iso": "MM", "name": "Myanmar" }],
+      "last_reviewed": "2026-09-24"
+    },
+    …
+  ]
+}
+```
+
+## total_hiring_cost
+
+`country`, `provider`, optional `salary` and `salary_currency`, optional `headcount` (1 to 50). Gross salary, statutory employer charges and the provider's published fee. Two employees in Mexico at 50,000 USD through Remote:
+
+```json
+{
+  "summary": "2 employees in Mexico at $50,000 gross a year through Remote: $12,189 a month all-in (gross salary, statutory employer charges and the EOR fee, $699 per employee).",
+  "headcount": 2,
+  "employer_cost_per_employee": { "pct_of_gross": "29.5%", "monthly": "$1,229", "annual": "$14,748", … },
+  "salary_plus_statutory": { "monthly": "$10,791", … },
+  "provider": { "id": "remote", "name": "Remote", "available": true, "fee_per_month": "$699", "fee_usd_month": 699, … },
+  "total": {
+    "monthly": "$12,189",
+    "annual": "$146,272",
+    "values": { "bound": null, "monthly_usd": 12189.31, "annual_usd": 146271.71, "fee_share_pct": 11.4691 }
+  }
+}
+```
+
+With a quote-only provider, `total.monthly` is `"quote only"` and no total is computed. With a provider that does not cover the country, it is `"not available"`.

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://docs.page/schema.json",
+  "name": "eorscope-mcp",
+  "description": "MCP server: statutory employer cost by country and published Employer of Record (EOR) provider fees.",
+  "sidebar": [
+    {
+      "group": "eorscope-mcp",
+      "pages": [
+        { "title": "Overview", "href": "/" },
+        { "title": "Tools", "href": "/tools" }
+      ]
+    }
+  ]
+}

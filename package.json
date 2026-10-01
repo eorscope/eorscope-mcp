@@ -1,0 +1,50 @@
+{
+  "name": "eorscope-mcp",
+  "version": "0.1.0",
+  "description": "MCP server: statutory employer cost by country and published Employer of Record (EOR) fees, from eorscope.com",
+  "type": "module",
+  "bin": {
+    "eorscope-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "data/snapshot.json",
+    "README.md",
+    "LICENSE",
+    "LICENSE-DATA",
+    "server.json"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "prepublishOnly": "npm run sync && npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "employer-of-record",
+    "eor",
+    "payroll",
+    "employer-cost",
+    "hiring"
+  ],
+  "homepage": "https://eorscope.com/eor-cost-calculator/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eorscope/eorscope-mcp.git"
+  },
+  "mcpName": "io.github.eorscope/eorscope-mcp",
+  "author": "EOR Scope (https://eorscope.com)",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
