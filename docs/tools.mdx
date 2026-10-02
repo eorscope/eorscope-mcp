@@ -1,9 +1,9 @@
 ---
 title: Tools
-description: The five tools of eorscope-mcp, each with a real output of the 2026-10-01 snapshot.
+description: The five tools of eorscope-mcp, each with a real output of the 2026-10-02 snapshot.
 ---
 
-Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-01 snapshot, shortened where marked `…`; `meta` is left out.
+Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-02 snapshot, shortened where marked `…`; `meta` is left out.
 
 Figures come as text (`"at least $156"`) and as numbers under `values`, next to a `bound` field. When a country's total is declared as a floor or a ceiling, the words "at least" or "at most" are part of the figure: keep them when you quote it.
 
@@ -129,15 +129,15 @@ Optional `provider`, optional `country` (adds whether each provider covers it). 
 
 ```json
 {
-  "summary": "2 employees in Mexico at $50,000 gross a year through Remote: $12,189 a month all-in (gross salary, statutory employer charges and the EOR fee, $699 per employee).",
+  "summary": "2 employees in Mexico at $50,000 gross a year through Remote: $12,287 a month all-in (gross salary, statutory employer charges and the EOR fee, $699 per employee).",
   "headcount": 2,
-  "employer_cost_per_employee": { "pct_of_gross": "29.5%", "monthly": "$1,229", "annual": "$14,748", … },
-  "salary_plus_statutory": { "monthly": "$10,791", … },
+  "employer_cost_per_employee": { "pct_of_gross": "30.7%", "monthly": "$1,278", "annual": "$15,332", … },
+  "salary_plus_statutory": { "monthly": "$10,889", … },
   "provider": { "id": "remote", "name": "Remote", "available": true, "fee_per_month": "$699", "fee_usd_month": 699, … },
   "total": {
-    "monthly": "$12,189",
-    "annual": "$146,272",
-    "values": { "bound": null, "monthly_usd": 12189.31, "annual_usd": 146271.71, "fee_share_pct": 11.4691 }
+    "monthly": "$12,287",
+    "annual": "$147,440",
+    "values": { "bound": null, "monthly_usd": 12286.67, "annual_usd": 147439.99, "fee_share_pct": 11.3782 }
   }
 }
 ```

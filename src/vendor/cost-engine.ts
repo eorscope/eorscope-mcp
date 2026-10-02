@@ -27,6 +27,8 @@ export interface Contribution {
   rate: number;
   /** gross | basic (share of gross) | flat amount | band (rate × the slice of gross between floor and cap) */
   base: 'gross' | 'basic' | 'flat' | 'band';
+  /** multiplier from gross to the statutory base (Mexico's SBC integrates aguinaldo and vacation premium); 1 when absent; ignored for flat */
+  base_factor?: number;
   /* Optional rather than `| null` so the island payload can omit them: they are null on
      most lines, and five null keys per contribution were 31 % of what the browser got.
      Every consumer here tests `!= null` or uses `??`, and `undefined` behaves as null
@@ -268,16 +270,17 @@ export function computeScenario(input: ScenarioInput, data: Datasets): ScenarioR
       continue;
     }
 
+    const factor = c.base_factor ?? 1;
     let baseLocal: number;
     if (c.base === 'flat') baseLocal = c.flat_annual_local ?? 0;
-    else if (c.base === 'basic') baseLocal = grossLocal * basicShare;
-    else baseLocal = grossLocal;
+    else if (c.base === 'basic') baseLocal = grossLocal * basicShare * factor;
+    else baseLocal = grossLocal * factor;
 
     let annualLocal: number;
     if (c.base === 'flat') annualLocal = baseLocal;
     else if (c.base === 'band') {
-      // only the slice of gross between the floor and the cap is charged (CPP2, Mexican "excedente")
-      const slice = Math.min(grossLocal, c.cap_annual_local ?? Number.POSITIVE_INFINITY) - (c.floor_annual_local ?? 0);
+      // only the slice of the base between the floor and the cap is charged (CPP2, Mexican "excedente")
+      const slice = Math.min(baseLocal, c.cap_annual_local ?? Number.POSITIVE_INFINITY) - (c.floor_annual_local ?? 0);
       annualLocal = Math.max(0, slice) * c.rate;
     } else annualLocal = clamp(baseLocal, c.floor_annual_local, c.cap_annual_local) * c.rate;
     const annualUsd = annualLocal / fxRate;

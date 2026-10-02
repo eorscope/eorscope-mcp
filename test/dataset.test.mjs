@@ -130,6 +130,16 @@ test('an exact zero is an answer in words, a small floor stays a number', () => 
   assert.match(tools.employerCost({ country: 'AE' }).employer_cost.monthly, /^at least \$\d+$/);
 });
 
+test('Mexico: IMSS, INFONAVIT and the state payroll tax are charged on the integrated base (31.0%)', () => {
+  const mx = snapshot.countries.find((c) => c.iso === 'MX');
+  const factors = mx.employer_contributions.filter((k) => k.base !== 'flat').map((k) => k.base_factor ?? 1);
+  assert.equal(factors.filter((f) => f === 1.049315).length, 9);
+  assert.equal(factors.filter((f) => f === 1.049867).length, 1);
+  const r = tools.employerCost({ country: 'MX' }).employer_cost;
+  assert.equal(r.pct_of_gross, '31.0%');
+  assert.ok(Math.abs(r.values.pct_of_gross - 30.9955) < 1e-4);
+});
+
 test('providers: 14 listed, 12 with a published price, quote-only is never a zero', () => {
   const { providers } = tools.providerFees();
   assert.equal(providers.length, 14);

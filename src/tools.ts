@@ -170,6 +170,7 @@ export function createTools(snapshot: Snapshot) {
           type: 'contribution',
           ...rate,
           base: k.base,
+          base_factor: k.base !== 'flat' && k.base_factor != null && k.base_factor !== 1 ? k.base_factor : undefined,
           base_floor_annual_local: k.floor_annual_local,
           base_cap_annual_local: k.cap_annual_local,
           flat_annual_local: k.flat_annual_local,
