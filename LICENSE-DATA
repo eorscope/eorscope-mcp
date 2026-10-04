@@ -1,5 +1,5 @@
 The data distributed with eorscope-mcp (data/snapshot.json: employer
-contribution lines by country, provider prices, exchange rates as recorded;
+contribution lines by country and exchange rates as recorded;
 and the reference dataset in test/fixtures/) is licensed under the Creative
 Commons Attribution 4.0 International licence (CC BY 4.0).
 

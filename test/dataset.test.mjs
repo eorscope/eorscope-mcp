@@ -113,12 +113,6 @@ test('declared floors and ceilings: the dataset lists, and "at least" in every f
     assert.match(r.summary, /costs at least \$[\d,]+ a month in statutory employer charges \(at least \+\d+\.\d% of gross\)/);
     assert.match(listed.find((c) => c.iso === iso).employer_cost_at_example, /^at least /);
     assert.match(tools.compareCountries({ countries: [iso, 'DE'], salary_usd: 50000 }).countries[0].employer_cost.monthly, /^at least \$/);
-    const total = tools.totalHiringCost({ country: iso, provider: 'remote' });
-    assert.match(total.total.monthly, /^at least \$[\d,]+$/);
-    assert.match(total.total.annual, /^at least \$[\d,]+$/);
-    assert.match(total.salary_plus_statutory.monthly, /^at least \$/);
-    assert.match(total.summary, /through Remote: at least \$[\d,]+ a month all-in/);
-    assert.match(tools.totalHiringCost({ country: iso, provider: 'rippling' }).total.note, /come to at least \$[\d,]+ a month before its fee/);
   }
 });
 
@@ -140,44 +134,10 @@ test('Mexico: IMSS, INFONAVIT and the state payroll tax are charged on the integ
   assert.ok(Math.abs(r.values.pct_of_gross - 30.9955) < 1e-4);
 });
 
-test('providers: 14 listed, 12 with a published price, quote-only is never a zero', () => {
-  const { providers } = tools.providerFees();
-  assert.equal(providers.length, 14);
-  const quoteOnly = providers.filter((p) => p.eor.fee_per_month === 'quote only');
-  assert.deepEqual(quoteOnly.map((p) => p.name).sort(), ['Rippling', 'Safeguard Global']);
-  for (const p of quoteOnly) assert.equal('fee_usd_month' in p.eor, false);
-  for (const p of providers) {
-    assert.match(p.eor.source.url, /^https:\/\//);
-    assert.match(p.eor.source.checked_at, /^\d{4}-\d{2}-\d{2}$/);
-    assert.ok(Array.isArray(p.countries_excluded));
-    if (p.eor.fee_usd_month != null) {
-      assert.ok(p.eor.fee_usd_month > 0);
-      assert.match(p.eor.fee_per_month, p.eor.pricing_model === 'from' ? /^from \$[\d,]+$/ : /^\$[\d,]+$/);
-    }
-  }
-  assert.ok(providers.some((p) => p.countries_excluded.some((c) => c.iso === 'MM')));
-  assert.equal(providers.some((p) => 'affiliate_url' in p || 'cta_url' in p), false);
-});
-
-test('total_hiring_cost: statutory charges plus the published fee, as the engine adds them', () => {
-  for (const c of snapshot.countries) {
-    for (const p of tools.providerFees().providers) {
-      const r = tools.totalHiringCost({ country: c.iso, provider: p.id });
-      const excluded = p.countries_excluded.some((x) => x.iso === c.iso);
-      if (excluded) assert.equal(r.total.monthly, 'not available');
-      else if (p.eor.fee_usd_month == null) assert.equal(r.total.monthly, 'quote only');
-      else {
-        // the parts are each rounded to the cent before being added here: a cent of slack on the sum
-        const expected = c.example_salary_usd / 12 + r.employer_cost_per_employee.values.monthly_usd + p.eor.fee_usd_month;
-        assert.ok(Math.abs(r.total.values.monthly_usd - expected) <= 0.011, `${c.iso} ${p.id}`);
-        assert.ok(Math.abs(r.total.values.annual_usd - r.total.values.monthly_usd * 12) <= 0.07);
-        if (c.total_bound === 'floor') assert.match(r.total.monthly, /^at least \$/);
-        if (c.total_bound === 'ceiling') assert.match(r.total.monthly, p.eor.pricing_model === 'list' ? /^at most \$/ : /^\$/);
-        if (!c.total_bound) assert.match(r.total.monthly, /^\$/);
-      }
-      assert.equal('values' in r.total, !excluded && p.eor.fee_usd_month != null);
-    }
-  }
+test('countries only: no provider data in the snapshot or the tools (publisher terms forbid redistribution)', () => {
+  assert.equal('vendors' in snapshot, false);
+  assert.deepEqual(Object.keys(tools).sort(), ['compareCountries', 'employerCost', 'listCountries']);
+  assert.doesNotMatch(JSON.stringify(snapshot), /price_usd|affiliate_url|cta_url/);
 });
 
 test('compare_countries keeps the order requested and carries each bound', () => {
@@ -193,13 +153,12 @@ test('compare_countries keeps the order requested and carries each bound', () =>
 test('no rank and no superlative in what the tools write', () => {
   const outputs = [
     tools.listCountries(),
-    tools.providerFees(),
     tools.compareCountries({ countries: snapshot.countries.slice(0, 10).map((c) => c.iso), salary_usd: 60000 }),
-    ...snapshot.countries.map((c) => tools.totalHiringCost({ country: c.iso, provider: 'deel' })),
-    ...snapshot.countries.map((c) => tools.totalHiringCost({ country: c.iso, provider: 'rippling' })),
+    // the sentences the tools write; ledger lines carry the site's data verbatim
+    ...snapshot.countries.map((c) => { const r = tools.employerCost({ country: c.iso }); return { summary: r.summary, employer_cost: r.employer_cost }; }),
   ];
   // keys that carry the site's own data verbatim are checked on the site, not here
-  const written = outputs.flatMap((o) => everyString({ ...o, providers: undefined, provider: undefined, salary: undefined }));
+  const written = outputs.flatMap((o) => everyString({ ...o, salary: undefined }));
   for (const s of written) assert.doesNotMatch(s, /\b(cheapest|lowest|highest|most expensive|the only|best|rank(ed|s)? (first|\d))\b/i, s);
   assert.equal(JSON.stringify(outputs).includes('"$0"'), false);
 });

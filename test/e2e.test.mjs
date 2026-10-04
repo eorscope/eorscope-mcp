@@ -64,9 +64,9 @@ test('initialize', async () => {
   send({ jsonrpc: '2.0', method: 'notifications/initialized' });
 });
 
-test('tools/list: five tools, each with a description and an input schema', async () => {
+test('tools/list: three tools, country data only, each with a description and an input schema', async () => {
   const { result } = await request('tools/list', {});
-  assert.deepEqual(result.tools.map((t) => t.name).sort(), ['compare_countries', 'employer_cost', 'list_countries', 'provider_fees', 'total_hiring_cost']);
+  assert.deepEqual(result.tools.map((t) => t.name).sort(), ['compare_countries', 'employer_cost', 'list_countries']);
   for (const t of result.tools) {
     assert.ok(t.description.length > 40);
     assert.equal(t.inputSchema.type, 'object');
@@ -75,7 +75,6 @@ test('tools/list: five tools, each with a description and an input schema', asyn
   }
   const schema = (name) => result.tools.find((t) => t.name === name).inputSchema;
   assert.deepEqual(schema('employer_cost').required, ['country']);
-  assert.deepEqual(schema('total_hiring_cost').required.sort(), ['country', 'provider']);
   assert.equal(schema('compare_countries').properties.countries.maxItems, 10);
 });
 
@@ -103,26 +102,6 @@ test('compare_countries', async () => {
   assert.deepEqual(o.countries.map((c) => c.iso), ['DE', 'PL', 'QA']);
   assert.match(o.countries[2].employer_cost.pct_of_gross, /^at least /);
   stamped(o, 'https://eorscope.com/employer-of-record/');
-});
-
-test('provider_fees', async () => {
-  const o = json(await call('provider_fees', {}));
-  assert.equal(o.providers.length, 14);
-  assert.equal(o.providers.find((p) => p.id === 'rippling').eor.fee_per_month, 'quote only');
-  stamped(o, 'https://eorscope.com/employer-of-record-cost/');
-  const one = json(await call('provider_fees', { provider: 'Deel', country: 'Myanmar' }));
-  assert.equal(one.providers.length, 1);
-  assert.equal(one.providers[0].available_in.available, false);
-});
-
-test('total_hiring_cost', async () => {
-  const o = json(await call('total_hiring_cost', { country: 'mexico', provider: 'Remote', salary: 50000, headcount: 2 }));
-  assert.equal(o.headcount, 2);
-  assert.match(o.total.monthly, /^\$[\d,]+$/);
-  assert.equal(o.provider.fee_usd_month, 699);
-  stamped(o, 'https://eorscope.com/employer-of-record/mexico/');
-  const quote = json(await call('total_hiring_cost', { country: 'FR', provider: 'Safeguard Global' }));
-  assert.equal(quote.total.monthly, 'quote only');
 });
 
 test('a bad request is an error result, not a crash', async () => {

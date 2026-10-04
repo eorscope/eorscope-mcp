@@ -69,6 +69,7 @@ const bounds = ['cap_annual_local', 'floor_annual_local', 'flat_annual_local', '
 
 // Same defaults as the zod schemas in site/src/content.config.ts. Only what the engine computes
 // with or a tool prints is kept: no FAQ, no search volume, no affiliate programme data.
+// No provider data either: the providers' terms forbid redistributing their prices (0.2.0).
 const countries = dir('countries').map((c) => {
   if (!fx.rates[c.currency]) throw new Error(`No FX rate for ${c.currency} (${c.iso})`);
   if (floor.has(c.iso) && ceiling.has(c.iso)) throw new Error(`${c.iso} is declared both a floor and a ceiling`);
@@ -93,20 +94,6 @@ const countries = dir('countries').map((c) => {
 });
 for (const iso of [...floor, ...ceiling]) if (!countries.some((c) => c.iso === iso)) throw new Error(`Declared bound for an unknown country: ${iso}`);
 
-const vendors = dir('vendors')
-  .map((v) => ({
-    id: v.id,
-    name: v.name,
-    cta_url: v.cta_url,
-    // tracked links stay on the site, next to its disclosure; the package only cites pricing pages
-    affiliate_url: null,
-    cta_label: v.cta_label ?? 'Get a quote',
-    plans: v.plans.map((p) => ({ annual_price_usd_month: null, min_term_months: null, fx_markup_pct: null, addons: [], ...p })),
-    countries_excluded: v.countries_excluded ?? [],
-    last_reviewed: v.last_reviewed,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
-
 const git = (...a) => {
   try {
     return execFileSync('git', ['-C', root, ...a], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
@@ -122,8 +109,7 @@ const snapshot = {
   source_commit: head ? head.slice(0, 12) + (dirty ? '-dirty' : '') : 'unknown',
   fx,
   countries,
-  vendors,
 };
 const json = JSON.stringify(snapshot);
 write(join(pkg, 'data', 'snapshot.json'), json + '\n');
-console.log(`sync ${snapshot_date} (${snapshot.source_commit}): engine copied to src/vendor, ${countries.length} countries (${floor.size} floors, ${ceiling.size} ceilings), ${vendors.length} providers, snapshot ${(json.length / 1024).toFixed(0)} kB`);
+console.log(`sync ${snapshot_date} (${snapshot.source_commit}): engine copied to src/vendor, ${countries.length} countries (${floor.size} floors, ${ceiling.size} ceilings), snapshot ${(json.length / 1024).toFixed(0)} kB`);

@@ -1,9 +1,9 @@
 ---
 title: Tools
-description: The five tools of eorscope-mcp, each with a real output of the 2026-10-02 snapshot.
+description: The three tools of eorscope-mcp, each with a real output of the 2026-10-04 snapshot.
 ---
 
-Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-02 snapshot, shortened where marked `…`; `meta` is left out.
+Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-04 snapshot, shortened where marked `…`; `meta` is left out.
 
 Figures come as text (`"at least $156"`) and as numbers under `values`, next to a `bound` field. When a country's total is declared as a floor or a ceiling, the words "at least" or "at most" are part of the figure: keep them when you quote it.
 
@@ -81,65 +81,3 @@ Optional `region`. Alphabetical order.
   ]
 }
 ```
-
-## provider_fees
-
-Optional `provider`, optional `country` (adds whether each provider covers it). A provider that publishes no price is returned as `"quote only"`, never as a zero. Two of the 14 rows:
-
-```json
-{
-  "providers": [
-    {
-      "id": "remote",
-      "name": "Remote",
-      "eor": {
-        "plan": "Employer of Record",
-        "pricing_model": "list",
-        "fee_per_month": "$699",
-        "fee_usd_month": 699,
-        "billing": "monthly",
-        "deposit_policy": "No deposit: 'We collect reserve payments in rare, high risk circumstances' (pricing FAQ).",
-        "source": { "name": "Remote — Pricing", "url": "https://remote.com/pricing", "checked_at": "2026-09-02" }
-      },
-      "countries_excluded": [{ "iso": "MM", "name": "Myanmar" }],
-      "last_reviewed": "2026-09-02"
-    },
-    {
-      "id": "rippling",
-      "name": "Rippling",
-      "eor": {
-        "plan": "Global Employer of Record",
-        "pricing_model": "quote",
-        "fee_per_month": "quote only",
-        "billing": "unknown",
-        "deposit_policy": "Not stated on the pricing page",
-        "source": { "name": "Rippling — Pricing", "url": "https://www.rippling.com/pricing", "checked_at": "2026-09-24" }
-      },
-      "countries_excluded": [{ "iso": "MM", "name": "Myanmar" }],
-      "last_reviewed": "2026-09-24"
-    },
-    …
-  ]
-}
-```
-
-## total_hiring_cost
-
-`country`, `provider`, optional `salary` and `salary_currency`, optional `headcount` (1 to 50). Gross salary, statutory employer charges and the provider's published fee. Two employees in Mexico at 50,000 USD through Remote:
-
-```json
-{
-  "summary": "2 employees in Mexico at $50,000 gross a year through Remote: $12,287 a month all-in (gross salary, statutory employer charges and the EOR fee, $699 per employee).",
-  "headcount": 2,
-  "employer_cost_per_employee": { "pct_of_gross": "30.7%", "monthly": "$1,278", "annual": "$15,332", … },
-  "salary_plus_statutory": { "monthly": "$10,889", … },
-  "provider": { "id": "remote", "name": "Remote", "available": true, "fee_per_month": "$699", "fee_usd_month": 699, … },
-  "total": {
-    "monthly": "$12,287",
-    "annual": "$147,440",
-    "values": { "bound": null, "monthly_usd": 12286.67, "annual_usd": 147439.99, "fee_share_pct": 11.3782 }
-  }
-}
-```
-
-With a quote-only provider, `total.monthly` is `"quote only"` and no total is computed. With a provider that does not cover the country, it is `"not available"`.

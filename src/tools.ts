@@ -1,16 +1,7 @@
-// The five tools as pure functions over a data snapshot. Every figure comes from the site's own
+// The three tools as pure functions over a data snapshot. Every figure comes from the site's own
 // engine and formatters (src/vendor, copied from the site by scripts/sync.mjs): nothing is re-implemented.
 import { readFileSync } from 'node:fs';
-import {
-  computeScenario,
-  eorPlan,
-  type Country,
-  type Datasets,
-  type Fx,
-  type Plan,
-  type ScenarioResult,
-  type Vendor,
-} from './vendor/cost-engine';
+import { computeScenario, type Country, type Datasets, type Fx, type ScenarioResult } from './vendor/cost-engine';
 import { local, pct, ratePct, usd } from './vendor/format';
 import { placeName } from './vendor/place-name';
 
@@ -28,15 +19,11 @@ export interface SnapCountry extends Country {
   total_bound: Bound;
   last_reviewed: string;
 }
-export interface SnapVendor extends Vendor {
-  last_reviewed: string;
-}
 export interface Snapshot {
   snapshot_date: string;
   source_commit: string;
   fx: Fx & { source_name?: string };
   countries: SnapCountry[];
-  vendors: SnapVendor[];
 }
 
 export interface SalaryArgs {
@@ -59,7 +46,6 @@ const word = (b: Bound) => (b ? BOUND_WORDS[b] : null);
 const number = (s: string) => Number(s.replace(/[^0-9.-]/g, ''));
 const cents = (n: number) => number(usd(Math.round(n * 1e6) / 1e6, { cents: true }));
 const pct4 = (rate: number) => number(pct(rate, 4));
-const price = (n: number) => usd(n, { cents: !Number.isInteger(n) });
 const drop = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null)) as Partial<T>;
 const norm = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 const ALIASES: Record<string, string> = { usa: 'US', unitedstatesofamerica: 'US', greatbritain: 'GB', korea: 'KR', czechia: 'CZ', turkiye: 'TR' };
@@ -67,7 +53,8 @@ const ALIASES: Record<string, string> = { usa: 'US', unitedstatesofamerica: 'US'
 const ENGINE_ASSUMPTIONS = ['basic_share_of_gross', 'employee_is_citizen_or_pr'];
 
 export function createTools(snapshot: Snapshot) {
-  const datasets: Datasets = { countries: snapshot.countries, vendors: snapshot.vendors, fx: snapshot.fx };
+  // countries only: the providers' terms forbid redistributing their prices
+  const datasets: Datasets = { countries: snapshot.countries, vendors: [], fx: snapshot.fx };
   const meta = (page_url: string) => ({
     snapshot_date: snapshot.snapshot_date,
     page_url,
@@ -83,15 +70,6 @@ export function createTools(snapshot: Snapshot) {
     const c = snapshot.countries.find((x) => x.iso === iso) ?? snapshot.countries.find((x) => norm(x.slug) === n || norm(x.name) === n);
     if (!c) throw new Error(`Unknown country "${q}". Use an ISO 3166-1 alpha-2 code or a name from list_countries (${snapshot.countries.length} countries).`);
     return c;
-  };
-
-  const vendor = (q: string): SnapVendor => {
-    const n = norm(q);
-    const v =
-      snapshot.vendors.find((x) => norm(x.id) === n || norm(x.name) === n) ??
-      snapshot.vendors.find((x) => n.length >= 3 && norm(x.name).startsWith(n));
-    if (!v) throw new Error(`Unknown provider "${q}". Providers: ${snapshot.vendors.map((x) => x.name).join(', ')}.`);
-    return v;
   };
 
   const fxInfo = (c: SnapCountry) => {
@@ -112,7 +90,7 @@ export function createTools(snapshot: Snapshot) {
     return { local_per_usd, date: fx.as_of, source: fx.source_name ?? 'ECB euro foreign exchange reference rates' };
   };
 
-  const scenario = (c: SnapCountry, a: SalaryArgs, vendorIds: string[] = [], headcount = 1) => {
+  const scenario = (c: SnapCountry, a: SalaryArgs) => {
     const declared = c.assumptions.filter((x) => ENGINE_ASSUMPTIONS.includes(x.id) && x.adjustable !== false).map((x) => x.id);
     for (const id of Object.keys(a.assumptions ?? {})) {
       if (!declared.includes(id)) {
@@ -120,7 +98,7 @@ export function createTools(snapshot: Snapshot) {
       }
     }
     const salaryAnnualUsd = a.salary == null ? c.example_salary_usd : a.salary_currency === 'local' ? a.salary / snapshot.fx.rates[c.currency] : a.salary;
-    return computeScenario({ countryIso: c.iso, salaryAnnualUsd, headcount, vendorIds, assumptions: a.assumptions }, datasets);
+    return computeScenario({ countryIso: c.iso, salaryAnnualUsd, headcount: 1, vendorIds: [], assumptions: a.assumptions }, datasets);
   };
 
   const salaryBlock = (c: SnapCountry, r: ScenarioResult) =>
@@ -187,26 +165,6 @@ export function createTools(snapshot: Snapshot) {
         });
       });
 
-  const planOut = (p: Plan, full: boolean) => {
-    const priced = p.pricing_model !== 'quote' && p.price_usd_month != null;
-    return drop({
-      plan: p.name,
-      scope: p.scope,
-      pricing_model: p.pricing_model,
-      // a provider that publishes no price is "quote only": never a zero
-      fee_per_month: priced ? `${p.pricing_model === 'from' ? 'from ' : ''}${price(p.price_usd_month!)}` : 'quote only',
-      fee_usd_month: priced ? p.price_usd_month : undefined,
-      annual_billing_fee_usd_month: p.annual_price_usd_month,
-      billing: p.billing,
-      min_term_months: p.min_term_months,
-      deposit_policy: p.deposit_policy || undefined,
-      fx_markup_pct: p.fx_markup_pct,
-      addons: full && p.addons.length ? p.addons : undefined,
-      notes: full ? p.notes : undefined,
-      source: p.source,
-    });
-  };
-
   return {
     listCountries(a: { region?: string } = {}) {
       const region = a.region ? norm(a.region) : null;
@@ -270,77 +228,6 @@ export function createTools(snapshot: Snapshot) {
           });
         }),
         meta: meta(`${SITE}/employer-of-record/`),
-      };
-    },
-
-    providerFees(a: { provider?: string; country?: string } = {}) {
-      const c = a.country ? country(a.country) : null;
-      const list = a.provider ? [vendor(a.provider)] : snapshot.vendors;
-      const one = list.length === 1;
-      return {
-        reading: 'Published Employer of Record fees per employee per month, in USD, each read on the date in source.checked_at. "from" is the provider\'s own published floor and may be higher in some countries; "quote only" means the provider publishes no price.',
-        providers: list.map((v) => {
-          const eor = eorPlan(v);
-          return drop({
-            id: v.id,
-            name: v.name,
-            eor: eor ? planOut(eor, one) : { fee_per_month: 'quote only' },
-            other_plans: one ? v.plans.filter((p) => p !== eor).map((p) => planOut(p, true)) : undefined,
-            countries_excluded: v.countries_excluded.map((iso) => ({ iso, name: snapshot.countries.find((x) => x.iso === iso)?.name ?? iso })),
-            available_in: c ? { country: c.name, available: !v.countries_excluded.includes(c.iso) } : undefined,
-            last_reviewed: v.last_reviewed,
-          });
-        }),
-        meta: meta(c ? pageUrl(c) : `${SITE}/employer-of-record-cost/`),
-      };
-    },
-
-    totalHiringCost(a: SalaryArgs & { country: string; provider: string; headcount?: number }) {
-      const c = country(a.country);
-      const v = vendor(a.provider);
-      const r = scenario(c, a, [v.id], a.headcount ?? 1);
-      const pv = r.perVendor[0];
-      const n = r.headcount;
-      const who = n === 1 ? 'One employee' : `${n} employees`;
-      const b = c.total_bound;
-      const plan = pv.plan ? planOut(pv.plan, false) : { fee_per_month: 'quote only' };
-      const beforeFee = r.employeeMonthlyUsd * n;
-      // a "from" fee can only go up, so a statutory ceiling no longer caps the total
-      const totalBound: Bound = b === 'ceiling' && pv.pricingModel !== 'list' ? null : b;
-      const notes = [
-        pv.pricingModel === 'from' ? `"From" price: ${v.name}'s own published floor; its fee may be higher in ${placeName(c.name)}.` : null,
-        b === 'ceiling' && totalBound === null && pv.totalMonthlyUsd != null ? 'Statutory charges are at most the figure shown and the fee is at least the figure shown, so the total is neither a floor nor a ceiling.' : null,
-      ].filter(Boolean);
-
-      let total: Record<string, unknown>;
-      if (!pv.available) {
-        total = { monthly: 'not available', note: `${v.name} does not cover ${placeName(c.name)}.` };
-      } else if (pv.totalMonthlyUsd == null || pv.totalAnnualUsd == null) {
-        total = { monthly: 'quote only', note: `${v.name} publishes no EOR price, so no total is computed. Salary and statutory charges come to ${bounded(b, usd(beforeFee))} a month before its fee.` };
-      } else {
-        total = drop({
-          monthly: bounded(totalBound, usd(pv.totalMonthlyUsd)),
-          annual: bounded(totalBound, usd(pv.totalAnnualUsd)),
-          values: { bound: word(totalBound), monthly_usd: cents(pv.totalMonthlyUsd), annual_usd: cents(pv.totalAnnualUsd), fee_share_pct: pv.feeShare != null ? pct4(pv.feeShare) : null },
-          note: notes.length ? notes.join(' ') : undefined,
-        });
-      }
-      return {
-        summary:
-          pv.available && pv.totalMonthlyUsd != null
-            ? `${who} in ${where(c)} at ${usd(r.salaryAnnualUsd)} gross a year through ${v.name}: ${total.monthly} a month all-in (gross salary, statutory employer charges and the EOR fee, ${plan.fee_per_month} per employee).${notes.length ? ` ${notes.join(' ')}` : ''}`
-            : `${who} in ${where(c)} at ${usd(r.salaryAnnualUsd)} gross a year through ${v.name}: ${total.note}`,
-        country: drop({ iso: c.iso, name: c.name, slug: c.slug, currency: c.currency, priced_for: c.example_place }),
-        headcount: n,
-        salary: salaryBlock(c, r),
-        employer_cost_per_employee: costBlock(c, r),
-        salary_plus_statutory: {
-          monthly: bounded(b, usd(beforeFee)),
-          values: { bound: word(b), monthly_usd: cents(beforeFee), annual_usd: cents(beforeFee * 12) },
-        },
-        provider: { id: v.id, name: v.name, available: pv.available, ...plan },
-        total,
-        meta: meta(pageUrl(c)),
       };
     },
   };

@@ -5,12 +5,11 @@ description: What eorscope-mcp answers, how to install it, and where its figures
 
 ## What it does
 
-eorscope-mcp is a Model Context Protocol server (stdio) that answers two questions about hiring abroad through an Employer of Record (EOR):
+eorscope-mcp is a Model Context Protocol server (stdio) that answers one question about hiring abroad, before any Employer of Record (EOR) fee: what an employer pays on top of a gross salary in a given country (statutory employer contributions, line by line, each with its official source and the date it was read).
 
-- what an employer pays on top of a gross salary in a given country: statutory employer contributions, line by line, each with its official source and the date it was read;
-- what EOR providers publish as their fee per employee per month, with the pricing-page URL and the date it was read.
+It does not carry EOR provider fees: the providers' terms do not allow their prices to be redistributed. Compare providers on their own pricing pages.
 
-It runs the same engine and the same data as the [EOR Scope cost calculator](https://eorscope.com/eor-cost-calculator/): 76 countries and 14 providers in the snapshot of 2026-10-02. The data ships inside the package and the server makes no network call.
+It runs the same engine and the same data as the [EOR Scope cost calculator](https://eorscope.com/eor-cost-calculator/): 76 countries in the snapshot of 2026-10-04. The data ships inside the package and the server makes no network call.
 
 Cost comparison, not legal or tax advice.
 
@@ -37,12 +36,11 @@ Claude Desktop, or any client that reads an `mcpServers` block:
 }
 ```
 
-The five tools are described, each with a real output, on the [tools page](/tools).
+The three tools are described, each with a real output, on the [tools page](/tools).
 
 ## Where the figures come from
 
 - Employer contributions: the tax and social-security administrations and the legislation of each country. Each line carries its source URL and the date it was read; a line that rests on a secondary source says so in its note.
-- Provider fees: each provider's own pricing page, with the date it was read. A "from" price is the provider's published starting price. A provider that publishes no price is returned as "quote only", never as a zero.
 - Exchange rates: ECB reference rates; the issuing central bank's parity for currencies pegged to the dollar; the European Commission's monthly accounting rate for the rest. The rate, its date and its source are in every answer.
 - Calculation: each contribution on its own base (gross, basic wage, fixed amount or a band of gross), floored and capped as the law writes it and skipped where a salary threshold excludes it, plus the recurring statutory extras the country counts in its total. Employee-side deductions and income tax are not modelled.
 
@@ -50,7 +48,7 @@ When a country's total is declared as a floor or a ceiling, the words "at least"
 
 The full method, its known limits and the list of sources are on the [EOR Scope methodology page](https://eorscope.com/methodology/).
 
-The numbers are an illustrative model of statutory charges and published list prices. Confirm every figure with the provider and a qualified local adviser before hiring.
+The numbers are an illustrative model of statutory charges. Confirm every figure with a qualified local adviser before hiring.
 
 ## Licence
 

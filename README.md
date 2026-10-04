@@ -1,11 +1,10 @@
 # eorscope-mcp
 
-A Model Context Protocol server (stdio) that answers two questions about hiring abroad through an Employer of Record (EOR):
+A Model Context Protocol server (stdio) that answers one question about hiring abroad, before any Employer of Record (EOR) fee: what an employer pays on top of a gross salary in a given country (statutory employer contributions, line by line, each with its official source and the date it was read).
 
-- what an employer pays on top of a gross salary in a given country (statutory employer contributions, line by line, each with its official source and the date it was read);
-- what EOR providers publish as their fee per employee per month, with the pricing-page URL and the date it was read.
+It does not carry EOR provider fees: the providers' terms do not allow their prices to be redistributed. Compare providers on their own pricing pages.
 
-It runs the same engine and the same data as the [EOR Scope calculator](https://eorscope.com/eor-cost-calculator/): 76 countries and 14 providers in the snapshot of 2026-10-02. The data ships inside the package; the server makes no network call.
+It runs the same engine and the same data as the [EOR Scope calculator](https://eorscope.com/eor-cost-calculator/): 76 countries in the snapshot of 2026-10-04. The data ships inside the package; the server makes no network call.
 
 Cost comparison, not legal or tax advice.
 
@@ -34,7 +33,7 @@ Claude Desktop, or any client that reads an `mcpServers` block:
 
 ## Tools
 
-Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-02 snapshot, shortened where marked `…`; `meta` is left out.
+Every answer is JSON and ends with a `meta` block: the snapshot date, the URL of the matching page on the site, the URL of the methodology page, the disclaimer and the data licence. The examples below are real outputs of the 2026-10-04 snapshot, shortened where marked `…`; `meta` is left out.
 
 Figures come as text (`"at least $156"`) and as numbers under `values`, next to a `bound` field. When a country's total is declared as a floor or a ceiling, the words "at least" or "at most" are part of the figure: keep them when you quote it.
 
@@ -113,78 +112,15 @@ Optional `region`. Alphabetical order.
 }
 ```
 
-### `provider_fees`
-
-Optional `provider`, optional `country` (adds whether each provider covers it). A provider that publishes no price is returned as `"quote only"`, never as a zero. Two of the 14 rows:
-
-```json
-{
-  "providers": [
-    {
-      "id": "remote",
-      "name": "Remote",
-      "eor": {
-        "plan": "Employer of Record",
-        "pricing_model": "list",
-        "fee_per_month": "$699",
-        "fee_usd_month": 699,
-        "billing": "monthly",
-        "deposit_policy": "No deposit: 'We collect reserve payments in rare, high risk circumstances' (pricing FAQ).",
-        "source": { "name": "Remote — Pricing", "url": "https://remote.com/pricing", "checked_at": "2026-09-02" }
-      },
-      "countries_excluded": [{ "iso": "MM", "name": "Myanmar" }],
-      "last_reviewed": "2026-09-02"
-    },
-    {
-      "id": "rippling",
-      "name": "Rippling",
-      "eor": {
-        "plan": "Global Employer of Record",
-        "pricing_model": "quote",
-        "fee_per_month": "quote only",
-        "billing": "unknown",
-        "deposit_policy": "Not stated on the pricing page",
-        "source": { "name": "Rippling — Pricing", "url": "https://www.rippling.com/pricing", "checked_at": "2026-09-24" }
-      },
-      "countries_excluded": [{ "iso": "MM", "name": "Myanmar" }],
-      "last_reviewed": "2026-09-24"
-    },
-    …
-  ]
-}
-```
-
-### `total_hiring_cost`
-
-`country`, `provider`, optional `salary` / `salary_currency`, optional `headcount` (1 to 50). Gross salary, statutory employer charges and the provider's published fee. `{"country": "MX", "provider": "remote", "salary": 50000, "headcount": 2}`:
-
-```json
-{
-  "summary": "2 employees in Mexico at $50,000 gross a year through Remote: $12,287 a month all-in (gross salary, statutory employer charges and the EOR fee, $699 per employee).",
-  "headcount": 2,
-  "employer_cost_per_employee": { "pct_of_gross": "30.7%", "monthly": "$1,278", "annual": "$15,332", … },
-  "salary_plus_statutory": { "monthly": "$10,889", … },
-  "provider": { "id": "remote", "name": "Remote", "available": true, "fee_per_month": "$699", "fee_usd_month": 699, … },
-  "total": {
-    "monthly": "$12,287",
-    "annual": "$147,440",
-    "values": { "bound": null, "monthly_usd": 12286.67, "annual_usd": 147439.99, "fee_share_pct": 11.3782 }
-  }
-}
-```
-
-With a quote-only provider, `total.monthly` is `"quote only"` and no total is computed. With a provider that does not cover the country, it is `"not available"`.
-
 ## Sources and method
 
 - Employer contributions: the tax and social-security administrations and the legislation of each country. Each line carries its source URL and the date it was read; a line that rests on a secondary source says so in its note (`include_notes`).
-- Provider fees: each provider's own pricing page, with the date it was read. "from" is the provider's published starting price.
 - Exchange rates: ECB reference rates; the issuing central bank's parity for currencies pegged to the dollar; the European Commission's monthly accounting rate for the rest. The rate, its date and its source are in every answer.
 - Calculation: each contribution on its own base (gross, basic wage, fixed amount or a band of gross), floored and capped as the law writes it and skipped where a salary threshold excludes it, plus the recurring statutory extras the country counts in its total. Employee-side deductions and income tax are not modelled.
 
 The full method, its known limits and the list of sources are on the [methodology page](https://eorscope.com/methodology/).
 
-The numbers are an illustrative model of statutory charges and published list prices. Confirm every figure with the provider and a qualified local adviser before hiring.
+The numbers are an illustrative model of statutory charges. Confirm every figure with a qualified local adviser before hiring.
 
 ## Development
 

@@ -1,7 +1,7 @@
 {
   "name": "eorscope-mcp",
-  "version": "0.1.0",
-  "description": "MCP server: statutory employer cost by country and published Employer of Record (EOR) fees, from eorscope.com",
+  "version": "0.2.0",
+  "description": "MCP server: statutory employer cost by country, before any Employer of Record (EOR) fee, from eorscope.com",
   "type": "module",
   "bin": {
     "eorscope-mcp": "dist/index.js"

@@ -22,14 +22,8 @@ const country = {
   ],
   thirteenth_month: true, paid_leave_days: 20,
 };
-const plan = (pricing_model, price_usd_month) => ({ id: 'eor', name: 'EOR', scope: 'eor', pricing_model, price_usd_month, billing: 'monthly', annual_price_usd_month: null, min_term_months: null, deposit_policy: 'none', fx_markup_pct: null, addons: [], source: src });
-const vendors = [
-  { id: 'a', name: 'A', cta_url: 'https://a.example', affiliate_url: null, cta_label: 'Quote', countries_excluded: [], plans: [plan('list', 599)], last_reviewed: '2026-09-02' },
-  { id: 'b', name: 'B', cta_url: 'https://b.example', affiliate_url: null, cta_label: 'Quote', countries_excluded: [], plans: [plan('quote', null)], last_reviewed: '2026-09-02' },
-  { id: 'c', name: 'C', cta_url: 'https://c.example', affiliate_url: null, cta_label: 'Quote', countries_excluded: ['ZZ'], plans: [plan('list', 199)], last_reviewed: '2026-09-02' },
-];
 // 2 ZZD per USD so caps and flat amounts are exercised in local currency
-const snap = (c = country) => ({ snapshot_date: '2026-09-02', source_commit: 'test', fx: { as_of: '2026-09-02', rates: { ZZD: 2 } }, countries: [c], vendors });
+const snap = (c = country) => ({ snapshot_date: '2026-09-02', source_commit: 'test', fx: { as_of: '2026-09-02', rates: { ZZD: 2 } }, countries: [c] });
 const tools = createTools(snap());
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-6, `${a} vs ${b}`);
 
@@ -51,8 +45,7 @@ test('ledger: caps, basic base, flat amounts, gating and extras', () => {
   close(r.employer_cost.values.annual_usd, 18900);
   close(r.employer_cost.values.pct_of_gross, 31.5);
   assert.equal(r.employer_cost.pct_of_gross, '31.5%');
-  // salary + employer cost per month
-  close(tools.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'a' }).salary_plus_statutory.values.monthly_usd, 6575);
+  close(r.employer_cost.values.monthly_usd, 1575);
 });
 
 test('low-pay scheme under the threshold, assumption override, local-currency salary', () => {
@@ -80,23 +73,6 @@ test('an assumption the country does not offer is refused', () => {
   assert.throws(() => fixed.employerCost({ country: 'ZZ', assumptions: { basic_share_of_gross: 1 } }), /cannot be changed/);
 });
 
-test('providers per headcount: list price, quote only, excluded country', () => {
-  const a = tools.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'a', headcount: 3 });
-  close(a.total.values.monthly_usd, (6575 + 599) * 3);
-  close(a.total.values.annual_usd, (6575 + 599) * 36);
-  assert.ok(Math.abs(a.total.values.fee_share_pct - (599 / 7174) * 100) < 1e-4);
-  assert.equal(a.total.monthly, '$21,522');
-  const b = tools.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'b', headcount: 3 });
-  assert.equal(b.total.monthly, 'quote only');
-  assert.equal(b.provider.fee_per_month, 'quote only');
-  assert.equal(b.provider.pricing_model, 'quote');
-  assert.equal('values' in b.total, false);
-  const c = tools.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'c', headcount: 3 });
-  assert.equal(c.provider.available, false);
-  assert.equal(c.total.monthly, 'not available');
-  assert.equal('values' in c.total, false);
-});
-
 test('band contributions are charged only on the slice between floor and cap', () => {
   const band = createTools(snap({
     ...country,
@@ -109,16 +85,12 @@ test('band contributions are charged only on the slice between floor and cap', (
   close(cost(20000), 400);
 });
 
-test('headcount is clamped to 1-50 and nothing is NaN', () => {
-  const r = tools.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'a', headcount: 999 });
-  assert.equal(r.headcount, 50);
-  assert.ok(Number.isFinite(r.total.values.monthly_usd));
+test('nothing is NaN', () => {
   for (const l of tools.employerCost({ country: 'ZZ', salary: 60000 }).lines) assert.ok(Number.isFinite(l.monthly_usd));
 });
 
-test('unknown country, unknown provider, missing FX rate', () => {
+test('unknown country, missing FX rate', () => {
   assert.throws(() => tools.employerCost({ country: 'XX', salary: 1 }), /Unknown country/);
-  assert.throws(() => tools.totalHiringCost({ country: 'ZZ', provider: 'nobody' }), /Unknown provider/);
   const noFx = createTools({ ...snap(), fx: { as_of: 'x', rates: {} } });
   assert.throws(() => noFx.employerCost({ country: 'ZZ', salary: 1 }), /No FX rate/);
 });
@@ -130,9 +102,7 @@ test('a declared floor or ceiling is written into every figure', () => {
   assert.equal(r.employer_cost.monthly, 'at least $1,575');
   assert.equal(r.employer_cost.annual, 'at least $18,900');
   assert.match(r.summary, /costs at least \$1,575 a month in statutory employer charges \(at least \+31\.5% of gross\)/);
-  assert.equal(floor.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'a' }).total.monthly, 'at least $7,174');
   assert.equal(floor.listCountries().countries[0].employer_cost_at_example, 'at least 31.5%');
   const ceiling = createTools(snap({ ...country, total_bound: 'ceiling' }));
   assert.equal(ceiling.employerCost({ country: 'ZZ', salary: 60000 }).employer_cost.monthly, 'at most $1,575');
-  assert.equal(ceiling.totalHiringCost({ country: 'ZZ', salary: 60000, provider: 'a' }).total.monthly, 'at most $7,174');
 });

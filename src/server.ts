@@ -68,37 +68,5 @@ export function createServer(snapshot: Snapshot) {
     (a) => answer(() => tools.compareCountries(a)),
   );
 
-  server.registerTool(
-    'provider_fees',
-    {
-      title: 'EOR provider fees',
-      description: `Published Employer of Record fees per employee per month (${snapshot.vendors.length} providers), each with its pricing-page URL, the date it was read and the countries the provider does not cover. A provider that publishes no price is returned as "quote only". ${stamp}`,
-      inputSchema: {
-        provider: z.string().max(60).optional().describe('Provider name or id ("Deel", "remote"). Omit for every provider.'),
-        country: country.optional().describe('Also say whether each provider covers this country'),
-      },
-      annotations: readOnly,
-    },
-    (a) => answer(() => tools.providerFees(a)),
-  );
-
-  server.registerTool(
-    'total_hiring_cost',
-    {
-      title: 'Total cost through an EOR provider',
-      description: `All-in cost of hiring in a country through one EOR provider: gross salary, statutory employer charges and the provider's published fee, per month and per year, for 1 to 50 employees. ${stamp}`,
-      inputSchema: {
-        country,
-        provider: z.string().min(1).max(60).describe('Provider name or id ("Deel", "remote")'),
-        salary,
-        salary_currency,
-        headcount: z.number().int().min(1).max(50).default(1).describe('Number of employees at this salary'),
-        assumptions,
-      },
-      annotations: readOnly,
-    },
-    (a) => answer(() => tools.totalHiringCost(a)),
-  );
-
   return server;
 }
