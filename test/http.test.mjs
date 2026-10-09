@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import { readFileSync } from 'node:fs';
 const SNAP = JSON.parse(readFileSync(new URL('../data/snapshot.json', import.meta.url), 'utf8'));
+// every country is reviewed since 09/10: the "not yet tracked" path is then covered in-process by plugin2.test.mjs (empty REVIEWED.json)
 const UNTRACKED = SNAP.countries.map((c) => c.iso).find((iso) => !SNAP.scheduled[iso]);
+const DATED = UNTRACKED ?? 'FR';
 
 const PORT = 18000 + (process.pid % 1000);
 const URL_ = `http://127.0.0.1:${PORT}/mcp`;
@@ -106,8 +108,8 @@ test('tools/call: every tool answers with page_url + utm_source=chatgpt, CC BY a
     fx_stress: await call('fx_stress', { country: 'BR', salary_local: 180000, budget_usd: 50000 }),
     contractor_rate_equivalent: await call('contractor_rate_equivalent', { country: 'DE', salary: 80000 }),
     // a country outside REVIEWED.json (picked from the snapshot, since the reviewed list grows): the "not yet tracked" path
-    scheduled_changes: await call('scheduled_changes', { country: UNTRACKED }),
-    cost_next_year: await call('cost_next_year', { country: UNTRACKED, salary: 60000, on_date: '2027-03-01' }),
+    scheduled_changes: await call('scheduled_changes', { country: DATED }),
+    cost_next_year: await call('cost_next_year', { country: DATED, salary: 60000, on_date: '2027-03-01' }),
     show_ledger: await show('show_ledger', { country: 'DE', salary: 80000 }),
     show_compare: await show('show_compare', { offers: [{ country: 'PL', salary: 60000 }, { country: 'PT', salary: 45000 }, { country: 'ES', salary: 50000 }, { country: 'IE', salary: 70000 }] }),
   };
@@ -115,7 +117,7 @@ test('tools/call: every tool answers with page_url + utm_source=chatgpt, CC BY a
   assert.match(outs.show_ledger.scenario_url, /^https:\/\/eorscope\.com\/eor-cost-calculator\/\?c=DE&s=80000&n=1&utm_source=chatgpt$/);
   assert.deepEqual(outs.show_ledger.lines, (await call('employer_cost', { country: 'DE', salary: 80000 })).lines);
   // a country outside REVIEWED.json: not yet tracked, never "no change"
-  for (const o of [outs.scheduled_changes, outs.cost_next_year]) {
+  for (const o of UNTRACKED ? [outs.scheduled_changes, outs.cost_next_year] : []) {
     assert.equal(o.tracking, 'not yet tracked');
     assert.match(o.summary, /not yet tracked/);
     assert.doesNotMatch(JSON.stringify(o), /no change/i);

@@ -9,17 +9,24 @@
     "url": "https://eorscope.com/"
   },
   "homepage": "https://eorscope.com/",
-  "keywords": ["employer cost", "employer of record", "payroll", "international hiring", "social security"],
+  "keywords": [
+    "employer cost",
+    "employer of record",
+    "payroll",
+    "international hiring",
+    "social security"
+  ],
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "EOR Scope",
         "shortDescription": "Employer cost by country",
-        "longDescription": "EOR Scope tells you what an employee costs the employer in another country, before any Employer of Record (EOR) fee. It works from a dated dataset of statutory employer contributions for 76 countries: each line comes with its rate, base, ceiling or floor, source (official wherever it exists) and check date, and salaries are converted at dated exchange rates.\n\nWhat you can do:\n- Get the statutory employer cost of a gross salary in one country, line by line, with monthly and annual totals.\n- Compare the same salary in several countries, or job offers with a different salary in each country.\n- Find the highest gross salary a total budget allows.\n- Check an EOR, PEO or payroll quote: separate the statutory employer charges from the fees on top.\n- Compare the cost of an EOR, your own entity and contractors over several years, from the fees you supply.\n- Read the leave, public holiday, notice, probation and 13th-month rules of a country.\n- Stress-test a salary against exchange-rate moves, find the contractor day rate that costs the same as an employee, and see enacted or announced changes to employer contributions with their effective dates.\n- Show the line-by-line ledger or a comparison table as a card you can read and copy.\n\nWho it is for: founders, finance, HR and people-operations teams who budget international hires or check a provider's quote.\n\nLimits:\n- 76 countries are covered; list_countries gives them. Other countries return no figure.\n- No provider prices: any EOR fee, entity cost or contractor fee in an answer is the one you supplied.\n- Figures are estimates on the dates shown in each answer. This is a cost comparison, not legal, tax or employment advice, and it does not compute an employee's net pay or income tax.\n- Dated changes are researched country by country; where they are not, the answer says \"not yet tracked\", which does not mean nothing is scheduled.\n- Read-only: the plugin hires, pays and contacts no one. No account is needed.\n\nData licence: CC BY 4.0, EOR Scope (eorscope.com).",
+        "longDescription": "EOR Scope tells you what an employee costs the employer in another country, before any Employer of Record (EOR) fee. It works from a dated dataset of statutory employer contributions for 76 countries: each line comes with its rate, base, ceiling or floor, source (official wherever it exists) and check date, and salaries are converted at dated exchange rates.\n\nWhat you can do:\n- Get the statutory employer cost of a gross salary in one country, line by line, with monthly and annual totals.\n- Give a monthly salary: it is converted with the country's statutory number of payments (13th and 14th month, aguinaldo) where tracked.\n- Compare the same salary in several countries, or job offers with a different salary in each country.\n- Find the highest gross salary a total budget allows.\n- Check an EOR, PEO or payroll quote: separate the statutory employer charges from the fees on top.\n- Compare the cost of an EOR, your own entity and contractors over several years, from the fees you supply.\n- Read the leave, public holiday, notice, probation and 13th-month rules of a country.\n- Stress-test a salary against exchange-rate moves, find the contractor day rate that costs the same as an employee, and see enacted or announced changes to employer contributions with their effective dates.\n- Show the line-by-line ledger or a comparison table as a card you can read and copy.\n\nWho it is for: founders, finance, HR and people-operations teams who budget international hires or check a provider's quote.\n\nLimits:\n- 76 countries are covered; list_countries gives them. Other countries return no figure.\n- No provider prices: any EOR fee, entity cost or contractor fee in an answer is the one you supplied.\n- Figures are estimates on the dates shown in each answer. This is a cost comparison, not legal, tax or employment advice, and it does not compute an employee's net pay or income tax.\n- Dated changes are researched country by country; where they are not, the answer says \"not yet tracked\", which does not mean nothing is scheduled.\n- Read-only: the plugin hires, pays and contacts no one. No account is needed.\n\nData licence: CC BY 4.0, EOR Scope (eorscope.com).",
         "developerName": "Les Créavores",
         "category": "Finance",
         "capabilities": [
           "Statutory employer cost by country",
+          "Monthly salary with the statutory number of payments",
           "Same salary or several offers compared across countries",
           "Highest gross salary for a budget",
           "Quote check against statutory cost",
