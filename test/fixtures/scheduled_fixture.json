@@ -1,0 +1,85 @@
+{
+  "_comment": "TEST FIXTURE, not data: invented changes on real ledger lines, to check that cost_next_year applies each change on its day. Never synced into the snapshot.",
+  "DE": {
+    "researched_on": "2026-10-09",
+    "coverage": "partial",
+    "scheduled_changes": [
+      {
+        "contribution_id": "rentenversicherung",
+        "effective_from": "2027-01-01",
+        "date_basis": "stated",
+        "change": { "rate": 0.095, "cap_annual_local": null, "threshold_weekly_local": null, "floor_annual_local": null },
+        "status": "enacted",
+        "note": "fixture: rate change",
+        "source": { "url": "https://example.test/rv", "quote": "fixture quote rv", "read_on": "2026-10-09", "kind": "official" }
+      },
+      {
+        "contribution_id": "krankenversicherung",
+        "effective_from": "2027-01-01",
+        "date_basis": "derived",
+        "change": { "rate": null, "cap_annual_local": 76500, "threshold_weekly_local": null, "floor_annual_local": null },
+        "status": "enacted",
+        "note": "fixture: ceiling change",
+        "source": { "url": "https://example.test/kv", "quote": "fixture quote kv", "read_on": "2026-10-09", "kind": "official" }
+      },
+      {
+        "contribution_id": "arbeitslosenversicherung",
+        "effective_from": "2027-07-01",
+        "date_basis": "inferred",
+        "change": { "rate": 0.015, "cap_annual_local": null, "threshold_weekly_local": null, "floor_annual_local": null },
+        "status": "budget_announced",
+        "note": "fixture: announced rate change",
+        "source": { "url": "https://example.test/av", "quote": "fixture quote av", "read_on": "2026-10-09", "kind": "secondary" }
+      },
+      {
+        "contribution_id": "pflegeversicherung",
+        "effective_from": "2026-08-01",
+        "date_basis": "stated",
+        "change": { "rate": 0.5, "cap_annual_local": null, "threshold_weekly_local": null, "floor_annual_local": null },
+        "status": "enacted",
+        "note": "fixture: in force before the country file's last review, so never applied again",
+        "source": { "url": "https://example.test/pv", "quote": "fixture quote pv", "read_on": "2026-10-09", "kind": "official" }
+      },
+      {
+        "contribution_id": "umlage_u2",
+        "effective_from": "2027-01-01",
+        "date_basis": "stated",
+        "change": { "rate": null, "cap_annual_local": null, "threshold_weekly_local": null, "floor_annual_local": null },
+        "status": "enacted",
+        "note": "fixture: rule enacted, amount not set yet",
+        "source": { "url": "https://example.test/u2", "quote": "fixture quote u2", "read_on": "2026-10-09", "kind": "official" }
+      },
+      {
+        "contribution_id": null,
+        "effective_from": "2027-01-01",
+        "date_basis": "stated",
+        "change": { "rate": 0.01, "cap_annual_local": null, "threshold_weekly_local": null, "floor_annual_local": null },
+        "status": "enacted",
+        "note": "fixture: no matching ledger line",
+        "source": { "url": "https://example.test/none", "quote": "fixture quote none", "read_on": "2026-10-09", "kind": "official" }
+      }
+    ]
+  },
+  "IE": {
+    "researched_on": "2026-10-09",
+    "coverage": "complete",
+    "scheduled_changes": [
+      {
+        "contribution_id": "employer_prsi_reduced",
+        "effective_from": "2027-01-01",
+        "date_basis": "stated",
+        "change": { "rate": null, "cap_annual_local": null, "threshold_weekly_local": 600, "floor_annual_local": null },
+        "status": "enacted",
+        "source": { "url": "https://example.test/prsi", "quote": "fixture quote prsi a0", "read_on": "2026-10-09", "kind": "official" }
+      },
+      {
+        "contribution_id": "employer_prsi_full",
+        "effective_from": "2027-01-01",
+        "date_basis": "stated",
+        "change": { "rate": null, "cap_annual_local": null, "threshold_weekly_local": 600, "floor_annual_local": null },
+        "status": "enacted",
+        "source": { "url": "https://example.test/prsi", "quote": "fixture quote prsi a1", "read_on": "2026-10-09", "kind": "official" }
+      }
+    ]
+  }
+}

@@ -1,12 +1,18 @@
 # eorscope-mcp
 
-A Model Context Protocol server (stdio) that answers one question about hiring abroad, before any Employer of Record (EOR) fee: what an employer pays on top of a gross salary in a given country (statutory employer contributions, line by line, each with its official source and the date it was read).
+A Model Context Protocol server (stdio) that answers one question about hiring abroad, before any Employer of Record (EOR) fee: what an employer pays on top of a gross salary in a given country (statutory employer contributions, line by line, each with its source, official wherever one exists, and the date it was read).
 
 It does not carry EOR provider fees: the providers' terms do not allow their prices to be redistributed. Compare providers on their own pricing pages.
 
 It runs the same engine and the same data as the [EOR Scope calculator](https://eorscope.com/eor-cost-calculator/): 76 countries in the snapshot of 2026-10-04. The data ships inside the package; the server makes no network call.
 
 Cost comparison, not legal or tax advice.
+
+## Remote server (no install)
+
+`https://mcp.eorscope.com/mcp` (Streamable HTTP, no authentication, read-only) runs the `main` branch of this repository: 14 tools (employer cost, country and offer comparisons, budget-to-salary, quote check, EOR / entity / contractor cost, employment terms, exchange-rate stress, contractor rate, dated changes, next year's cost) and two display widgets for ChatGPT and other MCP Apps hosts. A monthly salary is converted with the country's statutory number of payments where it is tracked. Documentation: https://mcp.eorscope.com/docs.html.
+
+The npm package below (0.2.0) is the earlier stdio server: four tools, same engine.
 
 ## Install
 

@@ -136,7 +136,7 @@ test('Mexico: IMSS, INFONAVIT and the state payroll tax are charged on the integ
 
 test('countries only: no provider data in the snapshot or the tools (publisher terms forbid redistribution)', () => {
   assert.equal('vendors' in snapshot, false);
-  assert.deepEqual(Object.keys(tools).sort(), ['compareCountries', 'employerCost', 'listCountries']);
+  assert.deepEqual(Object.keys(tools).sort(), ['compareCountries', 'compareOffers', 'compareStructures', 'contractorRateEquivalent', 'costNextYear', 'employerCost', 'employmentTerms', 'fxStress', 'listCountries', 'maxSalaryForBudget', 'reconcileQuote', 'scheduledChanges', 'showCompare', 'showLedger']);
   assert.doesNotMatch(JSON.stringify(snapshot), /price_usd|affiliate_url|cta_url/);
 });
 

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "eorscope",
+  "version": "1.0.0",
+  "description": "Statutory employer cost by country, line by line with sources and check dates, before any Employer of Record fee.",
+  "author": {
+    "name": "Les Créavores",
+    "email": "research@eorscope.com",
+    "url": "https://eorscope.com/"
+  },
+  "homepage": "https://eorscope.com/",
+  "keywords": ["employer cost", "employer of record", "payroll", "international hiring", "social security"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "EOR Scope",
+        "shortDescription": "Employer cost by country",
+        "longDescription": "EOR Scope tells you what an employee costs the employer in another country, before any Employer of Record (EOR) fee. It works from a dated dataset of statutory employer contributions for 76 countries: each line comes with its rate, base, ceiling or floor, source (official wherever it exists) and check date, and salaries are converted at dated exchange rates.\n\nWhat you can do:\n- Get the statutory employer cost of a gross salary in one country, line by line, with monthly and annual totals.\n- Compare the same salary in several countries, or job offers with a different salary in each country.\n- Find the highest gross salary a total budget allows.\n- Check an EOR, PEO or payroll quote: separate the statutory employer charges from the fees on top.\n- Compare the cost of an EOR, your own entity and contractors over several years, from the fees you supply.\n- Read the leave, public holiday, notice, probation and 13th-month rules of a country.\n- Stress-test a salary against exchange-rate moves, find the contractor day rate that costs the same as an employee, and see enacted or announced changes to employer contributions with their effective dates.\n- Show the line-by-line ledger or a comparison table as a card you can read and copy.\n\nWho it is for: founders, finance, HR and people-operations teams who budget international hires or check a provider's quote.\n\nLimits:\n- 76 countries are covered; list_countries gives them. Other countries return no figure.\n- No provider prices: any EOR fee, entity cost or contractor fee in an answer is the one you supplied.\n- Figures are estimates on the dates shown in each answer. This is a cost comparison, not legal, tax or employment advice, and it does not compute an employee's net pay or income tax.\n- Dated changes are researched country by country; where they are not, the answer says \"not yet tracked\", which does not mean nothing is scheduled.\n- Read-only: the plugin hires, pays and contacts no one. No account is needed.\n\nData licence: CC BY 4.0, EOR Scope (eorscope.com).",
+        "developerName": "Les Créavores",
+        "category": "Finance",
+        "capabilities": [
+          "Statutory employer cost by country",
+          "Same salary or several offers compared across countries",
+          "Highest gross salary for a budget",
+          "Quote check against statutory cost",
+          "Leave, notice and 13th-month rules",
+          "Dated changes to employer contributions"
+        ],
+        "websiteURL": "https://eorscope.com/",
+        "supportURL": "https://mcp.eorscope.com/support.html",
+        "privacyPolicyURL": "https://mcp.eorscope.com/privacy.html",
+        "termsOfServiceURL": "https://mcp.eorscope.com/terms.html",
+        "defaultPrompt": [
+          "What does a developer on 80,000 EUR a year cost the employer in Germany?",
+          "Compare the employer cost of a 70,000 USD salary in Poland, Portugal and Spain.",
+          "Check this EOR quote for Spain: salary 4,000, social security 1,250, fee 599 a month."
+        ],
+        "brandColor": "#0B6E4F",
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Statutory employer cost of one salary in one country, line by line.",
+              "prompt": "How much does it cost the employer to hire a software engineer in Germany on 80,000 euros a year?",
+              "tools_triggered": "employer_cost",
+              "expected_behavior": "Lists the German employer contributions line by line (pension, unemployment, health, long-term care, U2 maternity levy, U3 insolvency levy, accident insurance), each with its rate, base, ceiling, source and check date, and a total of about 20.8% of gross (about EUR 16,670 a year) before any EOR fee. Says it is not legal or tax advice."
+            },
+            {
+              "description": "Check a provider quote against the statutory cost, without naming any provider.",
+              "prompt": "Here is my EOR quote for an employee in Spain on EUR 48,000 a year paid in 12 instalments: salary 4,000 EUR, employer social security 1,250 EUR and a service fee of 599 EUR per month. How much of it is statutory?",
+              "tools_triggered": "reconcile_quote",
+              "expected_behavior": "Expects about EUR 1,286 a month of statutory employer charges on EUR 48,000 a year (6 lines: common contingencies, unemployment, FOGASA, vocational training, MEI, occupational accidents). Reports the quoted 1,250 as about EUR 36 below that total and the 599 service fee as the amount on top of the statutory cost. Names no provider."
+            },
+            {
+              "description": "Reverse calculation: highest gross salary for a total budget.",
+              "prompt": "I have a total budget of 100,000 euros a year to hire someone in Germany. What is the highest gross salary I can offer?",
+              "tools_triggered": "max_salary_for_budget",
+              "expected_behavior": "Answers about EUR 82,990 gross a year, with statutory employer charges of about 20.5% of gross, so that salary plus charges equal the budget, before any EOR fee."
+            },
+            {
+              "description": "Two job offers in two countries shown side by side in the comparison widget.",
+              "prompt": "Show me in a table what each candidate costs the company: candidate A in Poland at 240,000 PLN a year, candidate B in Portugal at 45,000 USD a year.",
+              "tools_triggered": "show_compare (compare_offers may also run for the data)",
+              "expected_behavior": "Displays a table in the order given with each offer's gross salary, statutory employer charges (Poland about +21.0% of gross, Portugal about +23.8%), total employer cost and the difference from the smaller total (Portugal), before any EOR fee."
+            },
+            {
+              "description": "Dated changes to employer contributions, with partial coverage stated.",
+              "prompt": "Are employer social insurance contributions in Ireland going to change next year?",
+              "tools_triggered": "scheduled_changes",
+              "expected_behavior": "Lists the dated changes recorded for Ireland, each marked enacted or announced in a budget (not yet enacted) with its effective date and source, for example the upper limit of the reduced employer PRSI band moving from EUR 552 to EUR 600 a week from 1 January 2027. States that coverage is partial and other changes may not be tracked yet."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Employee net pay and income tax are out of scope: EOR Scope computes the employer's cost only. No EOR Scope tool should run; the assistant answers on its own or says the plugin does not compute net pay.",
+              "prompt": "What is my take-home pay on a 60,000 EUR salary in Germany after income tax?"
+            },
+            {
+              "description": "Provider prices are out of scope: EOR Scope carries no provider's price. No EOR Scope tool should run; the assistant says the plugin gives the statutory cost before any provider fee and points to the provider.",
+              "prompt": "How much does Deel charge per employee per month?"
+            },
+            {
+              "description": "Legal documents and advice are out of scope: EOR Scope is a cost comparison. No EOR Scope tool should run; the assistant does not present EOR Scope output as legal advice.",
+              "prompt": "Draft an employment contract for a new hire in Ireland."
+            }
+          ]
+        },
+        "demo_recording_url": "",
+        "commerce": false,
+        "commerce_description": "This plugin does not sell products or process payments."
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "First submission. 14 read-only tools (12 data tools and 2 display widgets: ledger card and comparison table) over a dated dataset of statutory employer costs for 76 countries. No account, no provider prices."
+      }
+    }
+  }
+}

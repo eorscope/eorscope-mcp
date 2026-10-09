@@ -2,3 +2,7 @@ node_modules/
 # build output: rebuilt from src/ by `npm run build`, shipped to npm by prepublishOnly
 dist/
 *.tgz
+.vercel
+.env*
+# plugin-directory ZIP: rebuilt by `npm run package:submission`
+submission/dist/

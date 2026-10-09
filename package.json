@@ -21,6 +21,7 @@
     "sync": "node scripts/sync.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test \"test/*.test.mjs\"",
+    "package:submission": "node scripts/package-submission.mjs",
     "prepublishOnly": "npm run sync && npm run build && npm test"
   },
   "keywords": [

@@ -40,7 +40,11 @@ const stamped = (o, page) => {
 };
 
 before(() => {
-  child = spawn(process.execPath, [fileURLToPath(new URL(`../${pkg.bin['eorscope-mcp']}`, import.meta.url))], { stdio: ['pipe', 'pipe', 'pipe'] });
+  child = spawn(process.execPath, [fileURLToPath(new URL(`../${pkg.bin['eorscope-mcp']}`, import.meta.url))], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    // the default widget origin is under test: a developer's MCP_PUBLIC_ORIGIN must not leak in
+    env: Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'MCP_PUBLIC_ORIGIN')),
+  });
   child.stderr.on('data', (d) => { stderr += d; });
   child.stdout.setEncoding('utf8').on('data', (chunk) => {
     buffer += chunk;
@@ -59,18 +63,20 @@ after(() => child.kill());
 
 test('initialize', async () => {
   const { result } = await request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'e2e', version: '0' } });
-  assert.deepEqual(result.serverInfo, { name: 'eorscope-mcp', version: pkg.version });
+  assert.deepEqual(result.serverInfo, { name: 'eorscope-mcp', title: 'EOR Scope', version: pkg.version, description: result.serverInfo.description, websiteUrl: 'https://eorscope.com/', icons: [{ src: 'https://eorscope.com/favicon.svg', mimeType: 'image/svg+xml' }] });
   assert.ok(result.capabilities.tools);
   send({ jsonrpc: '2.0', method: 'notifications/initialized' });
 });
 
-test('tools/list: three tools, country data only, each with a description and an input schema', async () => {
+test('tools/list: fourteen tools, country data only, each with a description and an input schema', async () => {
   const { result } = await request('tools/list', {});
-  assert.deepEqual(result.tools.map((t) => t.name).sort(), ['compare_countries', 'employer_cost', 'list_countries']);
+  assert.deepEqual(result.tools.map((t) => t.name).sort(), ['compare_countries', 'compare_offers', 'compare_structures', 'contractor_rate_equivalent', 'cost_next_year', 'employer_cost', 'employment_terms', 'fx_stress', 'list_countries', 'max_salary_for_budget', 'reconcile_quote', 'scheduled_changes', 'show_compare', 'show_ledger']);
   for (const t of result.tools) {
     assert.ok(t.description.length > 40);
     assert.equal(t.inputSchema.type, 'object');
     assert.equal(t.annotations.readOnlyHint, true);
+    assert.equal(t.annotations.destructiveHint, false);
+    assert.equal(t.annotations.openWorldHint, false);
     assert.doesNotMatch(t.description, /cheapest|lowest|best|the only/i);
   }
   const schema = (name) => result.tools.find((t) => t.name === name).inputSchema;
@@ -93,7 +99,8 @@ test('employer_cost', async () => {
   assert.ok(o.lines.every((l) => l.source.url && l.source.checked_at));
   stamped(o, 'https://eorscope.com/employer-of-record/india/');
   const local = json(await call('employer_cost', { country: 'AE', salary: 240000, salary_currency: 'local', include_notes: true }));
-  assert.match(local.employer_cost.monthly, /^at least \$/);
+  // a salary given in local currency: amounts in it, the USD in brackets
+  assert.match(local.employer_cost.monthly, /^at least AED [\d,]+ \(\$[\d,]+\)$/);
   assert.ok(local.lines.some((l) => l.notes));
 });
 
@@ -102,6 +109,19 @@ test('compare_countries', async () => {
   assert.deepEqual(o.countries.map((c) => c.iso), ['DE', 'PL', 'QA']);
   assert.match(o.countries[2].employer_cost.pct_of_gross, /^at least /);
   stamped(o, 'https://eorscope.com/employer-of-record/');
+});
+
+test('stdio: the text block is the full JSON (clients that read only text), equal to structuredContent', async () => {
+  for (const [name, args] of [['employer_cost', { country: 'DE', salary: 80000 }], ['scheduled_changes', { country: 'IE' }], ['cost_next_year', { country: 'BR' }]]) {
+    const r = await call(name, args);
+    assert.deepEqual(json(r), r.structuredContent, name);
+  }
+});
+
+test('widgets: _meta.ui.domain defaults to https://mcp.eorscope.com', async () => {
+  const { result } = await request('resources/read', { uri: 'ui://eorscope/ledger-v6.html' });
+  assert.equal(result.contents[0]._meta.ui.domain, 'https://mcp.eorscope.com');
+  assert.equal(result.contents[0]._meta['openai/widgetDomain'], 'https://mcp.eorscope.com');
 });
 
 test('a bad request is an error result, not a crash', async () => {
@@ -116,7 +136,10 @@ test('a bad request is an error result, not a crash', async () => {
 test('package metadata: registry name, versions, link budget', () => {
   const server = JSON.parse(read('server.json'));
   assert.equal(pkg.mcpName, server.name);
-  assert.equal(server.version, pkg.version);
+  // the registry entry may run ahead of npm when only `remotes` changes (0.2.1 = remote server; npm stays 0.2.0 until 07/11)
+  const semver = (v) => v.split('.').map(Number);
+  assert.ok(semver(server.version).join('.') === server.version && server.version.localeCompare(pkg.version, undefined, { numeric: true }) >= 0);
+  assert.deepEqual(server.remotes, [{ type: 'streamable-http', url: 'https://mcp.eorscope.com/mcp' }]);
   assert.deepEqual(server.packages.map((p) => [p.registryType, p.identifier, p.version, p.transport.type]), [['npm', pkg.name, pkg.version, 'stdio']]);
   assert.ok(server.description.length <= 100);
   assert.equal(pkg.repository.url, `git+${server.repository.url}.git`);
@@ -134,9 +157,9 @@ test('licence: three sets of terms, and the engine copies say which one is their
   assert.ok(pkg.files.includes('LICENSE') && pkg.files.includes('LICENSE-DATA'));
   const licence = read('LICENSE');
   for (const part of ['1. SERVER CODE: MIT', '2. COST ENGINE: ALL RIGHTS RESERVED', '3. DATA: CC BY 4.0']) assert.ok(licence.includes(part), part);
-  for (const f of ['cost-engine.ts', 'format.ts', 'place-name.ts']) {
+  for (const f of ['cost-engine.ts', 'decision.ts', 'format.ts', 'place-name.ts']) {
     assert.match(read(`src/vendor/${f}`), /^\/\/ Copied from the eorscope\.com site by scripts\/sync\.mjs, do not edit\.\r?\n\/\/ Copyright EOR Scope\. All rights reserved\./);
   }
-  for (const f of ['dist/index.js', 'dist/tools.js']) assert.match(read(f), /Copyright EOR Scope, all rights reserved/);
+  for (const f of ['dist/index.js', 'dist/tools.js', 'dist/http.js']) assert.match(read(f), /Copyright EOR Scope, all rights reserved/);
   assert.ok(read('dist/index.js').startsWith('#!/usr/bin/env node'));
 });

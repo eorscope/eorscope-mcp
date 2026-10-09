@@ -9,7 +9,7 @@ const pkg = join(dirname(fileURLToPath(import.meta.url)), '..');
 rmSync(join(pkg, 'dist'), { recursive: true, force: true });
 await build({
   absWorkingDir: pkg,
-  entryPoints: ['src/index.ts', 'src/tools.ts'],
+  entryPoints: ['src/index.ts', 'src/tools.ts', 'src/http.ts', 'src/server.ts'],
   outdir: 'dist',
   bundle: true,
   platform: 'node',

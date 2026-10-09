@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><title>Documentation - EOR Scope for AI assistants</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="font-family:system-ui,sans-serif;max-width:46rem;margin:3rem auto;padding:0 1rem;line-height:1.5">
+<h1>EOR Scope for AI assistants</h1>
+<p>EOR Scope tells an AI assistant what an employee costs the employer in another country, before any Employer of Record (EOR) fee. It is a remote server of the Model Context Protocol (MCP), read-only, with no account and no authentication.</p>
+<p><strong>Server URL:</strong> <code>https://mcp.eorscope.com/mcp</code> (Streamable HTTP, POST).</p>
+
+<h2>What it answers</h2>
+<ul>
+<li>The statutory employer cost of a gross salary in one country, line by line: each employer contribution with its rate, base, ceiling or floor, source (official wherever one exists) and check date, then the monthly and annual total.</li>
+<li>The same salary in several countries, or job offers with a different salary in each country.</li>
+<li>The highest gross salary a total hiring budget allows.</li>
+<li>A check of an EOR, PEO or payroll quote: the statutory employer charges it should contain, and what is left on top.</li>
+<li>The cost of an EOR, an own entity or contractors over several years, from the fees the user supplies.</li>
+<li>Leave, public holidays, notice, probation and the statutory number of salary payments (13th and 14th month).</li>
+<li>Exchange-rate stress, the contractor day rate that costs the same as an employee, and enacted or announced changes to employer contributions with their effective dates.</li>
+</ul>
+<p>A salary can be annual or monthly. A monthly salary is converted with the statutory number of payments of the country where it is tracked (14 in Portugal, for example); elsewhere the answer says it computed 12 payments and how to change that.</p>
+
+<h2>Tools</h2>
+<p>All tools are read-only (<code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>openWorldHint: false</code>).</p>
+<table style="border-collapse:collapse;width:100%">
+<thead><tr><th style="text-align:left;border-bottom:1px solid #ccc;padding:.3rem">Tool</th><th style="text-align:left;border-bottom:1px solid #ccc;padding:.3rem">What it returns</th></tr></thead>
+<tbody>
+<tr><td style="padding:.3rem"><code>list_countries</code></td><td style="padding:.3rem">Countries covered, with currency, region and last review date.</td></tr>
+<tr><td style="padding:.3rem"><code>employer_cost</code></td><td style="padding:.3rem">Statutory employer cost of one salary in one country, line by line.</td></tr>
+<tr><td style="padding:.3rem"><code>compare_countries</code></td><td style="padding:.3rem">Employer cost of one salary in 2 to 10 countries.</td></tr>
+<tr><td style="padding:.3rem"><code>compare_offers</code></td><td style="padding:.3rem">Employer cost of job offers in 2 to 6 countries, one salary each.</td></tr>
+<tr><td style="padding:.3rem"><code>max_salary_for_budget</code></td><td style="padding:.3rem">Highest gross salary (annual and monthly) for an all-in budget.</td></tr>
+<tr><td style="padding:.3rem"><code>reconcile_quote</code></td><td style="padding:.3rem">Statutory charges expected in a quote, the gap and the amount on top. Names no provider.</td></tr>
+<tr><td style="padding:.3rem"><code>compare_structures</code></td><td style="padding:.3rem">EOR, own entity or contractors over several years, from fees the user supplies.</td></tr>
+<tr><td style="padding:.3rem"><code>employment_terms</code></td><td style="padding:.3rem">Leave, public holidays, probation, notice, statutory salary payments.</td></tr>
+<tr><td style="padding:.3rem"><code>fx_stress</code></td><td style="padding:.3rem">USD cost if the local currency moves 5, 10 or 20 percent.</td></tr>
+<tr><td style="padding:.3rem"><code>contractor_rate_equivalent</code></td><td style="padding:.3rem">Contractor day or hour rate that costs the same as an employee.</td></tr>
+<tr><td style="padding:.3rem"><code>scheduled_changes</code></td><td style="padding:.3rem">Enacted or announced changes to employer contributions, with dates and quotes.</td></tr>
+<tr><td style="padding:.3rem"><code>cost_next_year</code></td><td style="padding:.3rem">Employer cost at a future date, with the changes already scheduled.</td></tr>
+<tr><td style="padding:.3rem"><code>show_ledger</code></td><td style="padding:.3rem">Display: the line-by-line ledger as a card (sources, ceilings, monthly or annual, copy as CSV).</td></tr>
+<tr><td style="padding:.3rem"><code>show_compare</code></td><td style="padding:.3rem">Display: job offers or salaries in several countries as a table.</td></tr>
+</tbody></table>
+
+<h2>Try it</h2>
+<ul>
+<li>"How much does it cost the employer to hire a software engineer in Germany on 80,000 euros a year?"</li>
+<li>"Here is my EOR quote for an employee in Spain on EUR 48,000 a year paid in 12 instalments: salary 4,000 EUR, employer social security 1,250 EUR and a service fee of 599 EUR per month. How much of it is statutory?"</li>
+<li>"I have a total budget of 100,000 euros a year to hire someone in Germany. What is the highest gross salary I can offer?"</li>
+<li>"Are employer social insurance contributions in Ireland going to change next year?"</li>
+</ul>
+
+<h2>Add it to an assistant</h2>
+<ul>
+<li><strong>ChatGPT</strong>: Settings, Plugins, Add, "Create a custom MCP server", server URL above, authentication None (developer mode).</li>
+<li><strong>Claude</strong> (claude.ai, Desktop): Settings, Connectors, Add custom connector, paste the server URL, leave OAuth empty. Claude Code: <code>claude mcp add --transport http eorscope https://mcp.eorscope.com/mcp</code>.</li>
+<li><strong>Mistral Le Chat</strong>: Connectors, Add Connector, Custom MCP Connector, name <code>eorscope</code>, the server URL.</li>
+<li><strong>Perplexity</strong> (plans with custom connectors): Account settings, Connectors, Custom connector, Remote, the server URL, authentication None, transport Streamable HTTP.</li>
+<li>Any other MCP client: the server URL above, Streamable HTTP, no authentication.</li>
+</ul>
+
+<h2>Data</h2>
+<p>76 countries. Employer contributions come from each country's administration (social security, tax or labour authority) wherever it publishes them; a line that rests on a secondary source says so. Exchange rates are official and dated. Each answer gives the snapshot date and each line its check date. Countries where dated changes have not been researched yet answer "not yet tracked", which does not mean nothing is scheduled. Methodology: <a href="https://eorscope.com/methodology/">eorscope.com/methodology</a>. Data licence: CC BY 4.0, EOR Scope.</p>
+
+<h2>Limits</h2>
+<ul>
+<li>No provider prices: any EOR fee, entity cost or contractor fee in an answer is the one the user supplied.</li>
+<li>Cost comparison, not legal, tax or employment advice. It does not compute net pay or income tax, and it does not classify workers.</li>
+<li>Read-only: it hires, pays and contacts no one.</li>
+</ul>
+
+<h2>Privacy, terms and support</h2>
+<p><a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a> · <a href="mailto:research@eorscope.com">research@eorscope.com</a></p>
+<p>Published by Les Créavores, the publisher of <a href="https://eorscope.com/">eorscope.com</a>.</p>
+</body></html>

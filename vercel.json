@@ -1,0 +1,40 @@
+{
+  "framework": null,
+  "outputDirectory": "public",
+  "buildCommand": "npm run build",
+  "functions": {
+    "api/mcp.ts": {
+      "includeFiles": "{dist/**,data/snapshot.json}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/openai-apps-challenge",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}
