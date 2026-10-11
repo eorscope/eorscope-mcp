@@ -50,7 +50,7 @@
 <h2>Add it to an assistant</h2>
 <ul>
 <li><strong>ChatGPT</strong>: Settings, Plugins, Add, "Create a custom MCP server", server URL above, authentication None (developer mode).</li>
-<li><strong>Claude</strong> (claude.ai, Desktop): Settings, Connectors, Add custom connector, paste the server URL, leave OAuth empty. Claude Code: <code>claude mcp add --transport http eorscope https://mcp.eorscope.com/mcp</code>.</li>
+<li><strong>Claude</strong> (claude.ai, Desktop): Settings, Connectors, Add custom connector, paste <code>https://mcp.eorscope.com/claude</code> (the same server, with display cards set up for Claude), leave OAuth empty. Claude Code: <code>claude mcp add --transport http eorscope https://mcp.eorscope.com/claude</code>.</li>
 <li><strong>Mistral Le Chat</strong>: Connectors, Add Connector, Custom MCP Connector, name <code>eorscope</code>, the server URL.</li>
 <li><strong>Perplexity</strong> (plans with custom connectors): Account settings, Connectors, Custom connector, Remote, the server URL, authentication None, transport Streamable HTTP.</li>
 <li>Any other MCP client: the server URL above, Streamable HTTP, no authentication.</li>

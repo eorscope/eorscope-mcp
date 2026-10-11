@@ -11,6 +11,10 @@
     {
       "source": "/mcp",
       "destination": "/api/mcp"
+    },
+    {
+      "source": "/claude",
+      "destination": "/api/mcp?variant=claude"
     }
   ],
   "headers": [

@@ -184,3 +184,67 @@ test('GET is refused: stateless, POST only', async () => {
   const res = await fetch(URL_);
   assert.equal(res.status, 405);
 });
+
+test('an earlier widget URI still resolves to the current template (a host keeps the tool descriptor it read when the plugin was added)', async () => {
+  const { resources } = await rpc('resources/list', {});
+  assert.deepEqual(resources.map((r) => r.uri).sort(), Object.values(RENDER_TOOLS).sort());
+  const current = (await rpc('resources/read', { uri: RENDER_TOOLS.show_ledger })).contents[0].text;
+  for (const v of [2, 3, 4, 5]) {
+    const { contents: [c] } = await rpc('resources/read', { uri: `ui://eorscope/ledger-v${v}.html` });
+    assert.equal(c.uri, `ui://eorscope/ledger-v${v}.html`);
+    assert.equal(c.mimeType, 'text/html;profile=mcp-app');
+    assert.equal(c.text, current);
+  }
+  assert.equal((await rpc('resources/read', { uri: 'ui://eorscope/compare-v1.html' })).contents[0].text, (await rpc('resources/read', { uri: RENDER_TOOLS.show_compare })).contents[0].text);
+});
+
+test('lenient headers: a client that sends Accept application/json only, */* or nothing, or a newer MCP-Protocol-Version, is served (OpenAI plugin scan, 09/10)', async () => {
+  const init = { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2026-07-28', capabilities: {}, clientInfo: { name: 'scanner', version: '1' } } };
+  for (const accept of ['application/json', '*/*', undefined, 'text/event-stream']) {
+    const res = await fetch(URL_, { method: 'POST', headers: { 'content-type': 'application/json', ...(accept ? { accept } : {}) }, body: JSON.stringify(init) });
+    assert.equal(res.status, 200, `accept ${accept}`);
+    const body = await res.json();
+    assert.equal(body.result.serverInfo.name, 'eorscope-mcp');
+  }
+  for (const version of ['2026-07-28', '2026-01-26', '2025-06-18']) {
+    const res = await fetch(URL_, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json', 'mcp-protocol-version': version },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+    });
+    assert.equal(res.status, 200, `protocol ${version}`);
+    assert.equal((await res.json()).result.tools.length, 14);
+  }
+});
+
+test('/claude endpoint: same tools, widgets without _meta.ui.domain (Claude validates that field against the connector URL); /mcp keeps the https origin ChatGPT requires', async () => {
+  const at = async (path, method, params) => {
+    const res = await fetch(URL_.replace(/\/mcp$/, path), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    });
+    assert.equal(res.status, 200, `${path} ${method}`);
+    return (await res.json()).result;
+  };
+  const claudeTools = (await at('/claude', 'tools/list', {})).tools;
+  const chatgptTools = (await at('/mcp', 'tools/list', {})).tools;
+  assert.equal(claudeTools.length, 14);
+  // Anthropic's directory reads annotations.title; /mcp keeps the list OpenAI reviewed, byte for byte
+  for (const t of claudeTools) {
+    assert.ok(t.title, t.name);
+    assert.deepEqual(t.annotations, { readOnlyHint: true, destructiveHint: false, openWorldHint: false, title: t.title }, t.name);
+  }
+  assert.ok(chatgptTools.every((t) => !('title' in t.annotations)));
+  assert.deepEqual(claudeTools.map(({ annotations: { title, ...rest }, ...t }) => ({ ...t, annotations: rest })), chatgptTools);
+  const claude =(await at('/claude', 'resources/read', { uri: RENDER_TOOLS.show_ledger })).contents[0];
+  const chatgpt = (await at('/mcp', 'resources/read', { uri: RENDER_TOOLS.show_ledger })).contents[0];
+  assert.equal(claude._meta.ui.domain, undefined);
+  assert.deepEqual(claude._meta.ui.csp, { connectDomains: [], resourceDomains: [] });
+  assert.equal(claude.text, chatgpt.text);
+  assert.match(chatgpt._meta.ui.domain, /^https:\/\//);
+  const call = await at('/claude', 'tools/call', { name: 'employer_cost', arguments: { country: 'PT', salary: 3200, salary_currency: 'local', salary_period: 'month' } });
+  assert.equal(call.structuredContent.salary_basis.annual_gross_used, 44800);
+  // Claude visits are tagged as Claude in GA4, not as ChatGPT
+  assert.match(call.structuredContent.meta.page_url, /\?utm_source=claude$/);
+});

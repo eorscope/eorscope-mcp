@@ -6,5 +6,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { handleMcp } from '../dist/http.js';
 
 export default function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
-  return handleMcp(req, res, req.body);
+  // /claude is rewritten to /api/mcp?variant=claude (vercel.json)
+  const variant = new URL(req.url ?? '/', 'http://x').searchParams.get('variant') === 'claude' ? 'claude' : 'default';
+  return handleMcp(req, res, req.body, variant);
 }

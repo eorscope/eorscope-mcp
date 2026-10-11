@@ -95,7 +95,8 @@ test('list_countries', async () => {
 test('employer_cost', async () => {
   const o = json(await call('employer_cost', { country: 'India' }));
   assert.equal(o.country.iso, 'IN');
-  assert.match(o.employer_cost.pct_of_gross, /^\d+\.\d%$/);
+  // India is a declared floor since 10/10/2026 (statutory wages are at least half of remuneration)
+  assert.match(o.employer_cost.pct_of_gross, /^at least \d+\.\d%$/);
   assert.ok(o.lines.every((l) => l.source.url && l.source.checked_at));
   stamped(o, 'https://eorscope.com/employer-of-record/india/');
   const local = json(await call('employer_cost', { country: 'AE', salary: 240000, salary_currency: 'local', include_notes: true }));

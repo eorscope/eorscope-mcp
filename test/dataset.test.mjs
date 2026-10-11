@@ -99,12 +99,12 @@ for (const row of summary) {
 
 test('declared floors and ceilings: the dataset lists, and "at least" in every figure of a floor', () => {
   const flagged = (col) => summary.filter((r) => r[col] === 'true').map((r) => r.iso).sort();
-  assert.deepEqual(flagged('total_declared_floor'), ['AE', 'AR', 'BD', 'CL', 'CR', 'DO', 'EC', 'IL', 'LK', 'PE', 'QA', 'SA', 'UY']);
+  assert.deepEqual(flagged('total_declared_floor'), ['AE', 'AR', 'CL', 'CR', 'DO', 'EC', 'IL', 'IN', 'LK', 'PE', 'QA', 'SA', 'UY']);
   assert.deepEqual(flagged('total_declared_ceiling'), ['GH', 'NG']);
   assert.deepEqual(snapshot.countries.filter((c) => c.total_bound === 'floor').map((c) => c.iso).sort(), flagged('total_declared_floor'));
   assert.deepEqual(snapshot.countries.filter((c) => c.total_bound === 'ceiling').map((c) => c.iso).sort(), flagged('total_declared_ceiling'));
   const listed = tools.listCountries().countries;
-  for (const iso of ['EC', 'SA', 'BD']) {
+  for (const iso of ['EC', 'SA', 'IN']) {
     const r = tools.employerCost({ country: iso });
     assert.match(r.employer_cost.pct_of_gross, /^at least \d+\.\d%$/);
     assert.match(r.employer_cost.monthly, /^at least \$[\d,]+$/);
@@ -124,14 +124,14 @@ test('an exact zero is an answer in words, a small floor stays a number', () => 
   assert.match(tools.employerCost({ country: 'AE' }).employer_cost.monthly, /^at least \$\d+$/);
 });
 
-test('Mexico: IMSS, INFONAVIT and the state payroll tax are charged on the integrated base (31.0%)', () => {
+test('Mexico: IMSS, INFONAVIT and the state payroll tax are charged on the integrated base (30.9%)', () => {
   const mx = snapshot.countries.find((c) => c.iso === 'MX');
   const factors = mx.employer_contributions.filter((k) => k.base !== 'flat').map((k) => k.base_factor ?? 1);
   assert.equal(factors.filter((f) => f === 1.049315).length, 9);
   assert.equal(factors.filter((f) => f === 1.049867).length, 1);
   const r = tools.employerCost({ country: 'MX' }).employer_cost;
-  assert.equal(r.pct_of_gross, '31.0%');
-  assert.ok(Math.abs(r.values.pct_of_gross - 30.9955) < 1e-4);
+  assert.equal(r.pct_of_gross, '30.9%');
+  assert.ok(Math.abs(r.values.pct_of_gross - 30.9336) < 1e-4);
 });
 
 test('countries only: no provider data in the snapshot or the tools (publisher terms forbid redistribution)', () => {

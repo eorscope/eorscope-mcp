@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { createTools, SITE, type Snapshot, type ToolOptions } from './tools';
 import { COMPARE_HTML, COMPARE_URI, LEDGER_HTML, LEDGER_URI, WIDGET_MIME } from './widgets';
@@ -221,6 +221,13 @@ export interface ServerOptions extends ToolOptions {
   text?: 'json' | 'summary';
   /** origin the widgets are served for; MCP_PUBLIC_ORIGIN or https://mcp.eorscope.com when absent */
   publicOrigin?: string;
+  /** false: no `_meta.ui.domain` on the widgets. Each host has its own format for that field (ChatGPT: an https origin,
+   *  required for its directory; Claude: a hash of the connector URL, validated, else the card fails). The /claude
+   *  endpoint omits it: the widgets make no network call, so the host's default sandbox origin is enough. */
+  uiDomain?: boolean;
+  /** true: each tool's title is repeated in `annotations.title`, which Anthropic's directory reads for its listing (the
+   *  /claude endpoint); /mcp keeps the tool list OpenAI reviewed */
+  annotationTitle?: boolean;
 }
 
 export function createServer(snapshot: Snapshot, options: ServerOptions = {}) {
@@ -240,6 +247,11 @@ export function createServer(snapshot: Snapshot, options: ServerOptions = {}) {
         'EOR Scope gives the statutory employer cost of an employee by country (employer contributions with their sources, official wherever one exists, and check dates), before any Employer of Record (EOR) fee. Its tools fit questions about what an employee costs the employer abroad, checking an EOR, PEO or payroll quote, the employer cost of offers in several countries, a salary for a hiring budget, the cost of an EOR, an own entity or contractors, and dated changes to employer contributions. They do not cover net pay, employee income tax, legal advice, job search or the fees a provider charges. Cost comparison, not legal or tax advice.',
     },
   );
+  if (options.annotationTitle) {
+    const register = server.registerTool.bind(server) as (name: string, config: { title?: string; annotations?: object }, cb: unknown) => unknown;
+    (server as unknown as { registerTool: typeof register }).registerTool = (name, config, cb) =>
+      register(name, { ...config, annotations: { ...config.annotations, title: config.title } }, cb);
+  }
   const stamp = `Data snapshot ${snapshot.snapshot_date}. Cost comparison, not legal or tax advice.`;
   const readOnly = { readOnlyHint: true, destructiveHint: false, openWorldHint: false };
   // every tool returns structuredContent (checked against its outputSchema by the SDK) and a text block
@@ -560,8 +572,7 @@ export function createServer(snapshot: Snapshot, options: ServerOptions = {}) {
     (a) => render(() => tools.showCompare(a)),
   );
 
-  const resource = (name: string, uri: string, html: string, description: string) =>
-    server.registerResource(name, uri, { mimeType: WIDGET_MIME, description }, async () => ({
+  const widgetContents = (uri: string, html: string, description: string) => ({
       contents: [
         {
           uri,
@@ -569,7 +580,7 @@ export function createServer(snapshot: Snapshot, options: ServerOptions = {}) {
           text: html,
           _meta: {
             // no network access at all: the widget only renders the tool result it is given
-            ui: { prefersBorder: true, domain: origin, csp: { connectDomains: [], resourceDomains: [] } },
+            ui: { prefersBorder: true, ...(options.uiDomain === false ? {} : { domain: origin }), csp: { connectDomains: [], resourceDomains: [] } },
             'openai/widgetPrefersBorder': true,
             'openai/widgetDomain': origin,
             'openai/widgetDescription': description,
@@ -579,9 +590,16 @@ export function createServer(snapshot: Snapshot, options: ServerOptions = {}) {
           },
         },
       ],
-    }));
-  resource('ledger', LEDGER_URI, LEDGER_HTML, 'The statutory employer cost ledger of one employee, line by line, with sources and check dates.');
-  resource('compare', COMPARE_URI, COMPARE_HTML, 'A table of the total employer cost of job offers in several countries.');
+    });
+  const LEDGER_TEXT = 'The statutory employer cost ledger of one employee, line by line, with sources and check dates.';
+  const COMPARE_TEXT = 'A table of the total employer cost of job offers in several countries.';
+  server.registerResource('ledger', LEDGER_URI, { mimeType: WIDGET_MIME, description: LEDGER_TEXT }, async () => widgetContents(LEDGER_URI, LEDGER_HTML, LEDGER_TEXT));
+  server.registerResource('compare', COMPARE_URI, { mimeType: WIDGET_MIME, description: COMPARE_TEXT }, async () => widgetContents(COMPARE_URI, COMPARE_HTML, COMPARE_TEXT));
+  // A host keeps the tool descriptor it read when the plugin was added (dev mode) or last rescanned (published): an earlier
+  // widget URI must keep resolving, or the card fails with "could not open". Earlier versions serve the current template;
+  // they are readable but not listed (09/10: ledger-v3 cached by ChatGPT after the move to ledger-v6).
+  server.registerResource('ledger-earlier', new ResourceTemplate('ui://eorscope/ledger-v{version}.html', { list: undefined }), { mimeType: WIDGET_MIME, description: LEDGER_TEXT }, async (uri) => widgetContents(uri.href, LEDGER_HTML, LEDGER_TEXT));
+  server.registerResource('compare-earlier', new ResourceTemplate('ui://eorscope/compare-v{version}.html', { list: undefined }), { mimeType: WIDGET_MIME, description: COMPARE_TEXT }, async (uri) => widgetContents(uri.href, COMPARE_HTML, COMPARE_TEXT));
 
   return server;
 }

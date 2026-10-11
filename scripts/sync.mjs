@@ -86,17 +86,6 @@ const relabel = (c, l) =>
     : l;
 
 // 3. the data snapshot
-// Totals a country declares as a floor ("at least") or a ceiling ("at most"). No field of the
-// country schema carries this yet: the repository's one list is in tools/export_dataset.py.
-const py = readFileSync(exporter, 'utf8');
-const isoSet = (name) => {
-  const m = py.match(new RegExp(`^${name}\\s*=\\s*\\{([^}]*)\\}`, 'm'));
-  if (!m) throw new Error(`${name} not found in tools/export_dataset.py`);
-  return new Set(m[1].match(/[A-Z]{2}/g) ?? []);
-};
-const floor = isoSet('DECLARED_FLOOR');
-const ceiling = isoSet('DECLARED_CEILING');
-
 // 4. the dated changes, reviewed files only. A country absent here is "not yet tracked" in the tools.
 const pd = process.argv.indexOf('--plugin-data');
 const pluginData = pd > 0 ? process.argv[pd + 1] : join(root, 'audit', 'plugin_data');
@@ -155,7 +144,7 @@ const bounds = ['cap_annual_local', 'floor_annual_local', 'flat_annual_local', '
 // No provider data either: the providers' terms forbid redistributing their prices (0.2.0).
 const countries = dir('countries').map((c) => {
   if (!fx.rates[c.currency]) throw new Error(`No FX rate for ${c.currency} (${c.iso})`);
-  if (floor.has(c.iso) && ceiling.has(c.iso)) throw new Error(`${c.iso} is declared both a floor and a ceiling`);
+  if (c.total_bound != null && !['floor', 'ceiling'].includes(c.total_bound)) throw new Error(`${c.iso}: total_bound must be floor or ceiling`);
   return {
     iso: c.iso,
     slug: c.slug,
@@ -166,7 +155,8 @@ const countries = dir('countries').map((c) => {
     example_role: c.example_role,
     ...(c.example_place && { example_place: c.example_place }),
     ...(c.total_excludes && { total_excludes: c.total_excludes }),
-    total_bound: floor.has(c.iso) ? 'floor' : ceiling.has(c.iso) ? 'ceiling' : null,
+    // a total declared a floor ("at least") or a ceiling ("at most"): the country file's `total_bound`
+    total_bound: c.total_bound ?? null,
     assumptions: c.assumptions ?? [],
     employer_contributions: c.employer_contributions.map((k) => relabel(c, { ...Object.fromEntries(bounds.map((b) => [b, null])), ...k })),
     statutory_extras: (c.statutory_extras ?? []).map((e) => relabel(c, e)),
@@ -183,7 +173,9 @@ const countries = dir('countries').map((c) => {
     last_reviewed: c.last_reviewed,
   };
 });
-for (const iso of [...floor, ...ceiling]) if (!countries.some((c) => c.iso === iso)) throw new Error(`Declared bound for an unknown country: ${iso}`);
+// declared floors ("at least") and ceilings ("at most"): the country files' `total_bound` is the one source
+const floor = new Set(countries.filter((c) => c.total_bound === 'floor').map((c) => c.iso));
+const ceiling = new Set(countries.filter((c) => c.total_bound === 'ceiling').map((c) => c.iso));
 
 const scheduled = {};
 for (const entry of reviewed) {

@@ -6,3 +6,6 @@ dist/
 .env*
 # plugin-directory ZIP: rebuilt by `npm run package:submission`
 submission/dist/
+
+# demo video: served from the Vercel deployment, kept out of git and of the public repository
+public/demo/*.mp4

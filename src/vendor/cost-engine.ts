@@ -9,7 +9,7 @@
  *   gross salary
  * + employer contributions (each: rate × base, base floored/capped, gated by
  *   gross thresholds; base = gross | basic (share of gross) | flat amount)
- * + statutory extras flagged in_total (percent of gross | extra months | days)
+ * + statutory extras flagged in_total (percent of gross or basic | extra months | days)
  * = employer cost before EOR
  * + EOR fee per employee per month × 12 (list / from price; null when quote-only)
  * = total cost of employment through that provider
@@ -49,6 +49,8 @@ export interface StatutoryExtra {
   name: string;
   kind: 'percent' | 'months' | 'days';
   value: number;
+  /** percent only: the assiette, gross (default) or the same basic share as the `basic` contribution lines */
+  base?: 'gross' | 'basic';
   in_total: boolean;
   notes?: string;
   /** absent in the island payload: nothing in the island renders it */
@@ -62,6 +64,8 @@ export interface Assumption {
   notes?: string;
   /** false: fixed by law, shown as text rather than as a control */
   adjustable?: boolean;
+  /** lowest value the selector offers (India: wages is at least half of remuneration) */
+  min?: number;
 }
 
 export interface Country {
@@ -75,6 +79,8 @@ export interface Country {
   employer_contributions: Contribution[];
   statutory_extras: StatutoryExtra[];
   thirteenth_month: boolean;
+  /** the total is a declared floor ("at least") or ceiling */
+  total_bound?: 'floor' | 'ceiling';
   paid_leave_days: number;
 }
 
@@ -302,7 +308,7 @@ export function computeScenario(input: ScenarioInput, data: Datasets): ScenarioR
   for (const e of country.statutory_extras) {
     if (!e.in_total) continue;
     let annualUsd = 0;
-    if (e.kind === 'percent') annualUsd = grossUsd * (e.value / 100);
+    if (e.kind === 'percent') annualUsd = grossUsd * (e.base === 'basic' ? basicShare : 1) * (e.value / 100);
     else if (e.kind === 'months') annualUsd = (grossUsd / 12) * e.value;
     else if (e.kind === 'days') annualUsd = (grossUsd / 260) * e.value;
     lines.push({
