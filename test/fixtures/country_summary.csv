@@ -34,7 +34,7 @@ HK,Hong Kong,Asia,HKD,75000,Software engineer,,,3.0588,3.1,false,false,191.17,,7
 HR,Croatia,Europe,EUR,40000,Software engineer,,,16.5,16.5,false,false,550,,0.880669,2026-09-30,2026-09-24
 HU,Hungary,Europe,HUF,40000,Software engineer,,,13,13,false,false,433.33,,322.501101,2026-09-30,2026-09-20
 ID,Indonesia,Asia,IDR,25000,Software engineer,,,14.4271,14.4,false,false,300.56,,17891.096433,2026-09-30,2026-09-20
-IE,Ireland,Europe,EUR,65000,Software engineer,,,12.9,12.9,false,false,698.75,,0.880669,2026-09-30,2026-10-01
+IE,Ireland,Europe,EUR,65000,Software engineer,,,12.9,12.9,false,false,698.75,,0.880669,2026-09-30,2026-10-13
 IL,Israel,Middle East,ILS,75000,Software engineer,,,15.3204,15.3,true,false,957.53,,3.073624,2026-09-30,2026-09-20
 IN,India,Asia,INR,30000,Software engineer,,0.5,3.7615,3.8,true,false,94.04,,95.834875,2026-09-30,2026-09-26
 IT,Italy,Europe,EUR,55000,Software engineer,,,37.42,37.4,false,false,1715.08,,0.880669,2026-09-30,2026-09-05
@@ -64,7 +64,7 @@ QA,Qatar,Middle East,QAR,60000,Software engineer,,0.5,2.8846,2.9,true,false,144.
 RO,Romania,Europe,RON,40000,Software engineer,,,2.25,2.3,false,false,75,,4.648877,2026-09-30,2026-09-20
 RS,Serbia,Europe,RSD,32000,Software engineer,,,15.15,15.2,false,false,404,,103.36856,2026-10-01,2026-09-21
 SA,Saudi Arabia,Middle East,SAR,60000,Software engineer,,0.9,5.9667,6,true,false,298.33,,3.75,2026-09-20,2026-09-20
-SE,Sweden,Europe,SEK,70000,Software engineer,,,32.6028,32.6,false,false,1901.83,,9.978864,2026-09-30,2026-09-20
+SE,Sweden,Europe,SEK,70000,Software engineer,,,32.6028,32.6,false,false,1901.83,,9.978864,2026-09-30,2026-10-13
 SG,Singapore,Asia,SGD,70000,Software engineer,,,17.151,17.2,false,false,1000.47,,1.277235,2026-09-30,2026-09-02
 SK,Slovakia,Europe,EUR,40000,Software engineer,,,39.352,39.4,false,false,1311.73,,0.880669,2026-09-30,2026-09-24
 TH,Thailand,Asia,THB,30000,Software engineer,,,1.0904,1.1,false,false,27.26,,33.564949,2026-09-30,2026-09-20
