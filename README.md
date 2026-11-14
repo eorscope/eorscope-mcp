@@ -118,6 +118,16 @@ Optional `region`. Alphabetical order.
 }
 ```
 
+## Also published on
+
+EOR Scope publishes the same data and code in these places:
+
+- **Dataset copies**: [DataHub](https://datahub.io/eorscope/employer-costs) · [Harvard Dataverse](https://doi.org/10.7910/DVN/5487XL) (DOI 10.7910/DVN/5487XL) · [B2SHARE](https://b2share.eudat.eu/records/7cwdf-sc212) · [browsable copy on GitHub Pages](https://eorscope.github.io/employer-costs/)
+- **Packages**: [crates.io](https://crates.io/crates/eorscope) and [docs.rs](https://docs.rs/eorscope) (Rust) · [pkg.go.dev](https://pkg.go.dev/github.com/eorscope/employercosts) (Go) · [Maven Central](https://central.sonatype.com/artifact/com.eorscope/employer-costs) (Java) · [Clojars](https://clojars.org/net.clojars.eorscope/eorscope-employer-costs) (Clojure) · [code.dlang.org](https://code.dlang.org/packages/eorscope-employer-costs) (D) · [Haxelib](https://lib.haxe.org/p/eorscope-employer-costs/) (Haxe) · [SWI-Prolog packs](https://www.swi-prolog.org/pack/list?p=eorscope_employer_costs) · [R-universe](https://eorscope.r-universe.dev/eorscope) (R)
+- **MCP server**: [npm](https://www.npmjs.com/package/eorscope-mcp) · [Docker Hub](https://hub.docker.com/r/tresor4k/eorscope-mcp) · remote endpoint `https://mcp.eorscope.com/mcp`
+- **Listed as a reuse on national open-data portals**: [dados.gov.pt](https://dados.gov.pt/pt/reuses/eor-scope-custo-do-empregador-em-portugal-por-salario) and [the Portuguese dataset](https://dados.gov.pt/pt/datasets/custo-do-empregador-em-portugal-tsu-da-entidade-empregadora-e-14-prestacoes-outubro-2026) (Portugal) · [data.gov.ro](https://data.gov.ro/showcase/eor-scope) (Romania) · [andmed.eesti.ee](https://andmed.eesti.ee/usage-stories/tootaja-tooandjakulu-eestis-koos-statistikaameti-keskmise-tunnipalgaga) (Estonia) · [data.gov.tw](https://data.gov.tw/applications/136204) (Taiwan)
+- **Reviews**: [ProvenExpert](https://www.provenexpert.com/en-us/eor-scope/)
+
 ## Sources and method
 
 - Employer contributions: the tax and social-security administrations and the legislation of each country. Each line carries its source URL and the date it was read; a line that rests on a secondary source says so in its note (`include_notes`).
